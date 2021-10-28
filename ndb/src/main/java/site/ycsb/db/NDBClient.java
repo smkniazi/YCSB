@@ -13,6 +13,8 @@
  * implied. See the License for the specific language governing
  * permissions and limitations under the License. See accompanying
  * LICENSE file.
+ * <p>
+ * NDB client binding for YCSB.
  */
 
 /**
@@ -22,6 +24,8 @@
 package site.ycsb.db;
 
 import com.mysql.clusterj.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import site.ycsb.ByteIterator;
 import site.ycsb.DB;
 import site.ycsb.DBException;
@@ -32,13 +36,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 /**
  * YCSB binding for <a href="https://rondb.com/">RonDB</a>.
  */
 public class NDBClient extends DB {
   private static Logger logger = LoggerFactory.getLogger(NDBClient.class);
+
   private NDBConnection connection;
 
   /**
@@ -48,7 +51,7 @@ public class NDBClient extends DB {
   public void init() throws DBException {
     synchronized (this) {
       if (connection == null) {
-        connection = NDBConnection.connect();
+        connection = NDBConnection.connect(getProperties());
       }
     }
   }
@@ -86,7 +89,7 @@ public class NDBClient extends DB {
         result.put(field, UserTable.readFieldFromDTO(field, row));
       }
       session.release(row);
-      if(logger.isDebugEnabled()) {
+      if (logger.isDebugEnabled()) {
         logger.debug("Read Key " + key);
       }
       return Status.OK;
@@ -138,7 +141,7 @@ public class NDBClient extends DB {
       }
       session.savePersistent(row);
       session.release(row);
-      if(logger.isDebugEnabled()){
+      if (logger.isDebugEnabled()) {
         logger.debug("Updated Key " + key);
       }
       return Status.OK;
@@ -167,7 +170,7 @@ public class NDBClient extends DB {
       row.setKey(key);
       session.savePersistent(row);
       session.release(row);
-      if(logger.isDebugEnabled()){
+      if (logger.isDebugEnabled()) {
         logger.debug("Inserted Key " + key);
       }
       return Status.OK;

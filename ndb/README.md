@@ -23,7 +23,8 @@ This section describes how to run YCSB on NDB.
 
 ### 2. Create Table
 
-Create the following table in a database. The database name is set in clusterj configuration.
+Create the following table in a database. Default DB name is ycsb which you can override with 
+`ndb.schema` property  .
 
 ```sql
 CREATE TABLE `usertable` (  `key` varchar(255) NOT NULL,  `field0` varchar(255) DEFAULT NULL,  `field1` varchar(255) DEFAULT NULL,  `field2` varchar(255) DEFAULT NULL,  `field3` varchar(255) DEFAULT NULL,  `field4` varchar(255) DEFAULT NULL,  `field5` varchar(255) DEFAULT NULL,  `field6` varchar(255) DEFAULT NULL,  `field7` varchar(255) DEFAULT NULL,  `field8` varchar(255) DEFAULT NULL,  `field9` varchar(255) DEFAULT NULL,  PRIMARY KEY (`key`)  ) 
@@ -44,14 +45,15 @@ Git clone YCSB and compile:
     
 Set host, port, password, and cluster mode in the workload you plan to run. 
 
-#### TODO : FIX parameters
-- `ndb.host`
-- `ndb.port`
+- `ndb.host`  Default : 127.0.0.1
+- `ndb.port`  Default : 1186
+- `ndb.schema`  Default : ycsb 
 
 Or, you can set configs with the shell command, EG:
 
     ./bin/ycsb load ndb -s -P workloads/workloada
-    ./bin/ycsb load ndb -s -P workloads/workloada -p "ndb.host=127.0.0.1" -p "ndb.port=1186" > outputLoad.txt
+    OR
+    ./bin/ycsb load ndb -s -P workloads/workloada -p "ndb.host=127.0.0.1" -p "ndb.port=1186" -p "ndb.schema=ycsb" > outputLoad.txt
 
 ### 5. Load data and run tests
 

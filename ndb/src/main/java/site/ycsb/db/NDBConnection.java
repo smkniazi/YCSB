@@ -8,26 +8,50 @@ import site.ycsb.DBException;
 
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * NDB Connection object.
  */
 public final class NDBConnection {
-  private NDBConnection() {
-  }
 
-  static NDBConnection connect() throws DBException {
-    NDBConnection connection = new NDBConnection();
-    connection.setUpDBConnection();
-    return connection;
+  private static Logger logger = LoggerFactory.getLogger(NDBConnection.class);
 
-  }
+  public static final String HOST_PROPERTY = "ndb.host";
+  public static final String PORT_PROPERTY = "ndb.port";
+  public static final String SCHEMA_PROPERTY = "ndb.schema";
 
   private SessionFactory sessionFactory;
 
-  public void setUpDBConnection() throws DBException {
+  private NDBConnection() {
+  }
+
+  static NDBConnection connect(Properties props) throws DBException {
+    String port = props.getProperty(PORT_PROPERTY);
+    if (port == null) {
+      port = "1186";
+    }
+    String host = props.getProperty(HOST_PROPERTY);
+    if (host == null) {
+      host = "127.0.0.1";
+    }
+    String schema = props.getProperty(SCHEMA_PROPERTY);
+    if (schema == null) {
+      schema = "ycsb";
+    }
+
+    NDBConnection connection = new NDBConnection();
+    connection.setUpDBConnection(host, port, schema);
+    return connection;
+  }
+
+  public void setUpDBConnection(String host, String port, String schema) throws DBException {
+    logger.info("Connecting to  schema: " + schema + " on " + host + ":" + port + ".");
+
     Properties props = new Properties();
-    props.setProperty("com.mysql.clusterj.connectstring", "localhost");
-    props.setProperty("com.mysql.clusterj.database", "ycsb");
+    props.setProperty("com.mysql.clusterj.connectstring", host + ":" + port);
+    props.setProperty("com.mysql.clusterj.database", schema);
     props.setProperty("com.mysql.clusterj.connect.retries", "4");
     props.setProperty("com.mysql.clusterj.connect.delay", "5");
     props.setProperty("com.mysql.clusterj.connect.verbose", "1");
@@ -49,7 +73,7 @@ public final class NDBConnection {
     sessionFactory.close();
   }
 
-  public Session getSession(){
+  public Session getSession() {
     return sessionFactory.getSession();
   }
 
