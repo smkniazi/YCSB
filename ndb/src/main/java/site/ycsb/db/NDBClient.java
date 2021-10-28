@@ -13,37 +13,15 @@
  * implied. See the License for the specific language governing
  * permissions and limitations under the License. See accompanying
  * LICENSE file.
- * <p>
- * Redis client binding for YCSB.
- * <p>
- * All YCSB records are mapped to a Redis *hash field*.  For scanning
- * operations, all keys are saved (by an arbitrary hash) in a sorted set.
- * <p>
- * Redis client binding for YCSB.
- * <p>
- * All YCSB records are mapped to a Redis *hash field*.  For scanning
- * operations, all keys are saved (by an arbitrary hash) in a sorted set.
- * <p>
- * Redis client binding for YCSB.
- * <p>
- * All YCSB records are mapped to a Redis *hash field*.  For scanning
- * operations, all keys are saved (by an arbitrary hash) in a sorted set.
- * <p>
- * Redis client binding for YCSB.
- * <p>
- * All YCSB records are mapped to a Redis *hash field*.  For scanning
- * operations, all keys are saved (by an arbitrary hash) in a sorted set.
  */
 
 /**
- * Redis client binding for YCSB.
- *
- * All YCSB records are mapped to a Redis *hash field*.  For scanning
- * operations, all keys are saved (by an arbitrary hash) in a sorted set.
+ * NDB client binding for YCSB.
  */
 
 package site.ycsb.db;
 
+import com.mysql.clusterj.Session;
 import site.ycsb.ByteIterator;
 import site.ycsb.DB;
 import site.ycsb.DBException;
@@ -54,19 +32,25 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
- * YCSB binding for <a href="http://redis.io/">Redis</a>.
- *
- * See {@code redis/README.md} for details.
+ * YCSB binding for <a href="https://rondb.com/">RonDB</a>.
  */
 public class NDBClient extends DB {
+  private static Logger logger = LoggerFactory.getLogger(NDBClient.class);
+  private NDBConnection connection;
 
   /**
    * Initialize any state for this DB.
    * Called once per DB instance; there is one DB instance per client thread.
    */
   public void init() throws DBException {
-    System.out.println("XXX init called");
+    synchronized (this) {
+      if (connection == null) {
+        connection = NDBConnection.connect();
+      }
+    }
   }
 
   /**
@@ -74,7 +58,7 @@ public class NDBClient extends DB {
    * Called once per DB instance; there is one DB instance per client thread.
    */
   public void cleanup() throws DBException {
-    System.out.println("XXX cleanup called");
+    connection.closeConnection();
   }
 
   /**
@@ -90,8 +74,28 @@ public class NDBClient extends DB {
   @Override
   public Status read(String table, String key, Set<String> fields,
                      Map<String, ByteIterator> result) {
-    System.out.println("XXX read called");
-    return null;
+    Session session = connection.getSession();
+    try {
+      UserTable.UserTableDTO row = session.find(UserTable.UserTableDTO.class, key);
+      if (row == null) {
+        logger.info("Read. Key: " + key + " Not Found.");
+        return Status.NOT_FOUND;
+      }
+      Set<String> toRead = fields != null ? fields : UserTable.ALL_FIELDS;
+      for (String field : toRead) {
+        result.put(field, UserTable.readFieldFromDTO(field, row));
+      }
+      session.release(row);
+      if(logger.isDebugEnabled()) {
+        logger.debug("Read Key " + key);
+      }
+      return Status.OK;
+    } catch (Exception e) {
+      logger.info("Read Error: " + e);
+      return Status.ERROR;
+    } finally {
+      connection.returnSession(session);
+    }
   }
 
   /**
@@ -109,8 +113,7 @@ public class NDBClient extends DB {
   @Override
   public Status scan(String table, String startkey, int recordcount, Set<String> fields,
                      Vector<HashMap<String, ByteIterator>> result) {
-    System.out.println("XXX scan called");
-    return null;
+    return Status.NOT_IMPLEMENTED;
   }
 
   /**
@@ -125,8 +128,26 @@ public class NDBClient extends DB {
    */
   @Override
   public Status update(String table, String key, Map<String, ByteIterator> values) {
-    System.out.println("XXX update called");
-    return null;
+    Session session = connection.getSession();
+    try {
+      UserTable.UserTableDTO row = session.find(UserTable.UserTableDTO.class, key);
+      //update row
+      for (String field : values.keySet()) {
+        ByteIterator itr = values.get(field);
+        UserTable.setFieldInDto(row, field, itr);
+      }
+      session.savePersistent(row);
+      session.release(row);
+      if(logger.isDebugEnabled()){
+        logger.debug("Updated Key " + key);
+      }
+      return Status.OK;
+    } catch (Exception e) {
+      logger.info("Update Error: " + e);
+      return Status.ERROR;
+    } finally {
+      connection.returnSession(session);
+    }
   }
 
   /**
@@ -140,9 +161,24 @@ public class NDBClient extends DB {
    */
   @Override
   public Status insert(String table, String key, Map<String, ByteIterator> values) {
-    System.out.println("XXX insert called");
-    return null;
+    Session session = connection.getSession();
+    try {
+      UserTable.UserTableDTO row = UserTable.createDTO(session, values);
+      row.setKey(key);
+      session.savePersistent(row);
+      session.release(row);
+      if(logger.isDebugEnabled()){
+        logger.debug("Inserted Key " + key);
+      }
+      return Status.OK;
+    } catch (Exception e) {
+      logger.info("Insert Error: " + e);
+      return Status.ERROR;
+    } finally {
+      connection.returnSession(session);
+    }
   }
+
 
   /**
    * Delete a record from the database.
@@ -153,7 +189,17 @@ public class NDBClient extends DB {
    */
   @Override
   public Status delete(String table, String key) {
-    System.out.println("XXX delete called");
-    return null;
+    Session session = connection.getSession();
+    try {
+      UserTable.UserTableDTO row = session.newInstance(UserTable.UserTableDTO.class, key);
+      session.deletePersistent(row);
+      session.release(row);
+      return Status.OK;
+    } catch (Exception e) {
+      logger.info("Deleted Error: " + e);
+      return Status.ERROR;
+    } finally {
+      connection.returnSession(session);
+    }
   }
 }
