@@ -14,11 +14,11 @@
  * permissions and limitations under the License. See accompanying
  * LICENSE file.
  * <p>
- * NDB client binding for YCSB.
+ * RonDB client binding for YCSB.
  */
 
 /**
- * NDB client binding for YCSB.
+ * RonDB client binding for YCSB.
  */
 
 package site.ycsb.db;
@@ -39,10 +39,10 @@ import java.util.Vector;
 /**
  * YCSB binding for <a href="https://rondb.com/">RonDB</a>.
  */
-public class NDBClient extends DB {
-  private static Logger logger = LoggerFactory.getLogger(NDBClient.class);
+public class RonDBClient extends DB {
+  private static Logger logger = LoggerFactory.getLogger(RonDBClient.class);
 
-  private NDBConnection connection;
+  private RonDBConnection connection;
 
   /**
    * Initialize any state for this DB.
@@ -51,7 +51,7 @@ public class NDBClient extends DB {
   public void init() throws DBException {
     synchronized (this) {
       if (connection == null) {
-        connection = NDBConnection.connect(getProperties());
+        connection = RonDBConnection.connect(getProperties());
       }
     }
   }

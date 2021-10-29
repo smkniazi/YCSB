@@ -12,22 +12,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * NDB Connection object.
+ * RonDB Connection object.
  */
-public final class NDBConnection {
+public final class RonDBConnection {
 
-  private static Logger logger = LoggerFactory.getLogger(NDBConnection.class);
+  private static Logger logger = LoggerFactory.getLogger(RonDBConnection.class);
 
-  public static final String HOST_PROPERTY = "ndb.host";
-  public static final String PORT_PROPERTY = "ndb.port";
-  public static final String SCHEMA_PROPERTY = "ndb.schema";
+  public static final String HOST_PROPERTY = "rondb.host";
+  public static final String PORT_PROPERTY = "rondb.port";
+  public static final String SCHEMA_PROPERTY = "rondb.schema";
 
   private SessionFactory sessionFactory;
 
-  private NDBConnection() {
+  private RonDBConnection() {
   }
 
-  static NDBConnection connect(Properties props) throws DBException {
+  static RonDBConnection connect(Properties props) throws DBException {
     String port = props.getProperty(PORT_PROPERTY);
     if (port == null) {
       port = "1186";
@@ -41,7 +41,7 @@ public final class NDBConnection {
       schema = "ycsb";
     }
 
-    NDBConnection connection = new NDBConnection();
+    RonDBConnection connection = new RonDBConnection();
     connection.setUpDBConnection(host, port, schema);
     return connection;
   }
@@ -66,7 +66,7 @@ public final class NDBConnection {
     } catch (ClusterJException ex) {
       throw new DBException(ex);
     }
-    System.out.println("Connected to NDB");
+    System.out.println("Connected to RonDB");
   }
 
   public void closeConnection() {
@@ -78,7 +78,7 @@ public final class NDBConnection {
   }
 
   public void returnSession(Session session) {
-    assert !session.isClosed(); // to make sure that we do not close session in NDBClient
+    assert !session.isClosed(); // to make sure that we do not close session in RonDBClient
     session.close();
   }
 }

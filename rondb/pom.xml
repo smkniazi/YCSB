@@ -25,15 +25,15 @@ LICENSE file.
     <relativePath>../binding-parent</relativePath>
   </parent>
   
-  <artifactId>ndb-binding</artifactId>
-  <name>NDB Binding</name>
+  <artifactId>rondb-binding</artifactId>
+  <name>RonDB Binding</name>
   <packaging>jar</packaging>
 
   <dependencies>
     <dependency>
       <groupId>com.mysql.ndb</groupId>
       <artifactId>clusterj-rondb</artifactId>
-      <version>${ndb.clusterj.version}</version>
+      <version>${rondb.clusterj.version}</version>
     </dependency>
     <dependency>
       <groupId>site.ycsb</groupId>
