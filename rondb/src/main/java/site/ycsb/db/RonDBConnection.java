@@ -23,6 +23,8 @@ public final class RonDBConnection {
   public static final String SCHEMA_PROPERTY = "rondb.schema";
 
   private SessionFactory sessionFactory;
+  private static ThreadLocal<Session> sessions = new ThreadLocal<>();
+
 
   private RonDBConnection() {
   }
@@ -74,11 +76,17 @@ public final class RonDBConnection {
   }
 
   public Session getSession() {
-    return sessionFactory.getSession();
+    Session session  = sessions.get();
+    if (session == null){
+      session = sessionFactory.getSession();
+      sessions.set(session);
+    }
+
+    return session;
   }
 
   public void returnSession(Session session) {
-    assert !session.isClosed(); // to make sure that we do not close session in RonDBClient
-    session.close();
+    // do not close the session. the same session will be
+    // returned if needed again.
   }
 }

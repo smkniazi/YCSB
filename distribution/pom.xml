@@ -266,7 +266,7 @@ LICENSE file.
     </dependency>
     <dependency>
       <groupId>site.ycsb</groupId>
-      <artifactId>ndb-binding</artifactId>
+      <artifactId>rondb-binding</artifactId>
       <version>${project.version}</version>
     </dependency>
 

@@ -15,6 +15,8 @@
  * LICENSE file.
  * <p>
  * RonDB client binding for YCSB.
+ * <p>
+ * RonDB client binding for YCSB.
  */
 
 /**
@@ -23,7 +25,11 @@
 
 package site.ycsb.db;
 
+import com.mysql.clusterj.Query;
 import com.mysql.clusterj.Session;
+import com.mysql.clusterj.query.Predicate;
+import com.mysql.clusterj.query.QueryBuilder;
+import com.mysql.clusterj.query.QueryDomainType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import site.ycsb.ByteIterator;
@@ -32,6 +38,7 @@ import site.ycsb.DBException;
 import site.ycsb.Status;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
@@ -53,6 +60,8 @@ public class RonDBClient extends DB {
       if (connection == null) {
         connection = RonDBConnection.connect(getProperties());
       }
+      Session session = connection.getSession(); //initialize session for this thread
+      connection.returnSession(session);
     }
   }
 
@@ -88,7 +97,7 @@ public class RonDBClient extends DB {
       for (String field : toRead) {
         result.put(field, UserTable.readFieldFromDTO(field, row));
       }
-      session.release(row);
+      releaseDTO(session, row);
       if (logger.isDebugEnabled()) {
         logger.debug("Read Key " + key);
       }
@@ -116,7 +125,33 @@ public class RonDBClient extends DB {
   @Override
   public Status scan(String table, String startkey, int recordcount, Set<String> fields,
                      Vector<HashMap<String, ByteIterator>> result) {
-    return Status.NOT_IMPLEMENTED;
+    Session session = connection.getSession();
+    try {
+      QueryBuilder qb = session.getQueryBuilder();
+      QueryDomainType<UserTable.UserTableDTO> dobj =
+          qb.createQueryDefinition(UserTable.UserTableDTO.class);
+      Predicate pred1 = dobj.get(UserTable.KEY).greaterEqual(dobj.param(UserTable.KEY + "Param"));
+      dobj.where(pred1);
+      Query<UserTable.UserTableDTO> query = session.createQuery(dobj);
+      query.setParameter(UserTable.KEY + "Param", startkey);
+      query.setLimits(0, recordcount);
+      List<UserTable.UserTableDTO> scanResults = query.getResultList();
+      for (UserTable.UserTableDTO dto : scanResults) {
+        result.add(UserTable.convertDTO(dto, fields != null ? fields : UserTable.ALL_FIELDS));
+        releaseDTO(session, dto);
+      }
+
+      if (logger.isDebugEnabled()) {
+        logger.debug("Scan. Rows returned: " + result.size());
+      }
+      return Status.OK;
+    } catch (Exception e) {
+      e.printStackTrace();
+      logger.info("Scan Error: " + e);
+      return Status.ERROR;
+    } finally {
+      connection.returnSession(session);
+    }
   }
 
   /**
@@ -140,7 +175,7 @@ public class RonDBClient extends DB {
         UserTable.setFieldInDto(row, field, itr);
       }
       session.savePersistent(row);
-      session.release(row);
+      releaseDTO(session, row);
       if (logger.isDebugEnabled()) {
         logger.debug("Updated Key " + key);
       }
@@ -169,7 +204,7 @@ public class RonDBClient extends DB {
       UserTable.UserTableDTO row = UserTable.createDTO(session, values);
       row.setKey(key);
       session.savePersistent(row);
-      session.release(row);
+      releaseDTO(session, row);
       if (logger.isDebugEnabled()) {
         logger.debug("Inserted Key " + key);
       }
@@ -196,7 +231,7 @@ public class RonDBClient extends DB {
     try {
       UserTable.UserTableDTO row = session.newInstance(UserTable.UserTableDTO.class, key);
       session.deletePersistent(row);
-      session.release(row);
+      releaseDTO(session, row);
       return Status.OK;
     } catch (Exception e) {
       logger.info("Deleted Error: " + e);
@@ -204,5 +239,9 @@ public class RonDBClient extends DB {
     } finally {
       connection.returnSession(session);
     }
+  }
+
+  private void releaseDTO(Session session, UserTable.UserTableDTO dto) {
+    session.releaseCache(dto, dto.getClass());
   }
 }
