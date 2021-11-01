@@ -13,10 +13,6 @@
  * implied. See the License for the specific language governing
  * permissions and limitations under the License. See accompanying
  * LICENSE file.
- * <p>
- * RonDB client binding for YCSB.
- * <p>
- * RonDB client binding for YCSB.
  */
 
 /**
@@ -25,6 +21,7 @@
 
 package site.ycsb.db;
 
+import com.mysql.clusterj.ClusterJException;
 import com.mysql.clusterj.Query;
 import com.mysql.clusterj.Session;
 import com.mysql.clusterj.query.Predicate;
@@ -48,20 +45,21 @@ import java.util.Vector;
  */
 public class RonDBClient extends DB {
   private static Logger logger = LoggerFactory.getLogger(RonDBClient.class);
-
-  private RonDBConnection connection;
+  private static RonDBConnection connection;
 
   /**
    * Initialize any state for this DB.
    * Called once per DB instance; there is one DB instance per client thread.
    */
   public void init() throws DBException {
-    synchronized (this) {
+    synchronized (logger) {
       if (connection == null) {
         connection = RonDBConnection.connect(getProperties());
       }
       Session session = connection.getSession(); //initialize session for this thread
       connection.returnSession(session);
+      System.out.println("Created a session for the thread");
+
     }
   }
 
@@ -70,7 +68,11 @@ public class RonDBClient extends DB {
    * Called once per DB instance; there is one DB instance per client thread.
    */
   public void cleanup() throws DBException {
-    connection.closeConnection();
+    synchronized (logger) {
+      if (connection != null) {
+        RonDBConnection.closeConnection(connection);
+      }
+    }
   }
 
   /**
@@ -103,8 +105,11 @@ public class RonDBClient extends DB {
       }
       return Status.OK;
     } catch (Exception e) {
-      logger.info("Read Error: " + e);
-      return Status.ERROR;
+      if (!isSessionClosing(e)) {
+        logger.warn("Read Error: " + e);
+        return Status.ERROR;
+      }
+      return Status.OK; // session is closing
     } finally {
       connection.returnSession(session);
     }
@@ -146,9 +151,11 @@ public class RonDBClient extends DB {
       }
       return Status.OK;
     } catch (Exception e) {
-      e.printStackTrace();
-      logger.info("Scan Error: " + e);
-      return Status.ERROR;
+      if (!isSessionClosing(e)) {
+        logger.warn("Scan Error: " + e);
+        return Status.ERROR;
+      }
+      return Status.OK;
     } finally {
       connection.returnSession(session);
     }
@@ -181,8 +188,11 @@ public class RonDBClient extends DB {
       }
       return Status.OK;
     } catch (Exception e) {
-      logger.info("Update Error: " + e);
-      return Status.ERROR;
+      if (!isSessionClosing(e)) {
+        logger.warn("Update Error: " + e);
+        return Status.ERROR;
+      }
+      return Status.OK;
     } finally {
       connection.returnSession(session);
     }
@@ -210,8 +220,11 @@ public class RonDBClient extends DB {
       }
       return Status.OK;
     } catch (Exception e) {
-      logger.info("Insert Error: " + e);
-      return Status.ERROR;
+      if (!isSessionClosing(e)) {
+        logger.warn("Insert Error: " + e);
+        return Status.ERROR;
+      }
+      return Status.OK;
     } finally {
       connection.returnSession(session);
     }
@@ -234,8 +247,11 @@ public class RonDBClient extends DB {
       releaseDTO(session, row);
       return Status.OK;
     } catch (Exception e) {
-      logger.info("Deleted Error: " + e);
-      return Status.ERROR;
+      if (!isSessionClosing(e)) {
+        logger.warn("Delete Error: " + e);
+        return Status.ERROR;
+      }
+      return Status.OK;
     } finally {
       connection.returnSession(session);
     }
@@ -243,5 +259,12 @@ public class RonDBClient extends DB {
 
   private void releaseDTO(Session session, UserTable.UserTableDTO dto) {
     session.releaseCache(dto, dto.getClass());
+  }
+
+  private boolean isSessionClosing(Exception e) {
+    if (e instanceof ClusterJException && e.getMessage().contains("Db is closing")) {
+      return true;
+    }
+    return false;
   }
 }

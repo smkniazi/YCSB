@@ -29,7 +29,7 @@ public final class RonDBConnection {
   private RonDBConnection() {
   }
 
-  static RonDBConnection connect(Properties props) throws DBException {
+  static synchronized RonDBConnection connect(Properties props) throws DBException {
     String port = props.getProperty(PORT_PROPERTY);
     if (port == null) {
       port = "1186";
@@ -71,13 +71,13 @@ public final class RonDBConnection {
     System.out.println("Connected to RonDB");
   }
 
-  public void closeConnection() {
-    sessionFactory.close();
+  public static synchronized  void closeConnection(RonDBConnection connection) {
+    connection.sessionFactory.close();
   }
 
   public Session getSession() {
-    Session session  = sessions.get();
-    if (session == null){
+    Session session = sessions.get();
+    if (session == null) {
       session = sessionFactory.getSession();
       sessions.set(session);
     }
