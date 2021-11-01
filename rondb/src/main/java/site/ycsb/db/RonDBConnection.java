@@ -22,7 +22,7 @@ public final class RonDBConnection {
   public static final String PORT_PROPERTY = "rondb.port";
   public static final String SCHEMA_PROPERTY = "rondb.schema";
 
-  private SessionFactory sessionFactory;
+  private static SessionFactory sessionFactory;
   private static ThreadLocal<Session> sessions = new ThreadLocal<>();
 
 
@@ -71,8 +71,10 @@ public final class RonDBConnection {
     System.out.println("Connected to RonDB");
   }
 
-  public static synchronized  void closeConnection(RonDBConnection connection) {
-//    connection.sessionFactory.close();
+  public static synchronized  void closeSession(RonDBConnection connection) {
+    Session session = connection.getSession();
+    session.close();
+    sessions.set(null);
   }
 
   public Session getSession() {

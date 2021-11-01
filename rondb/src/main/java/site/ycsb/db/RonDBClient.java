@@ -13,6 +13,8 @@
  * implied. See the License for the specific language governing
  * permissions and limitations under the License. See accompanying
  * LICENSE file.
+ * <p>
+ * RonDB client binding for YCSB.
  */
 
 /**
@@ -46,13 +48,14 @@ import java.util.Vector;
 public class RonDBClient extends DB {
   private static Logger logger = LoggerFactory.getLogger(RonDBClient.class);
   private static RonDBConnection connection;
+  private static Object lock = new Object();
 
   /**
    * Initialize any state for this DB.
    * Called once per DB instance; there is one DB instance per client thread.
    */
   public void init() throws DBException {
-    synchronized (logger) {
+    synchronized (lock) {
       if (connection == null) {
         connection = RonDBConnection.connect(getProperties());
       }
@@ -68,9 +71,9 @@ public class RonDBClient extends DB {
    * Called once per DB instance; there is one DB instance per client thread.
    */
   public void cleanup() throws DBException {
-    synchronized (logger) {
+    synchronized (lock) {
       if (connection != null) {
-        RonDBConnection.closeConnection(connection);
+        RonDBConnection.closeSession(connection);
       }
     }
   }
