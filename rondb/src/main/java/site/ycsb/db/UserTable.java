@@ -7,7 +7,6 @@ import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
 import site.ycsb.ByteArrayByteIterator;
 import site.ycsb.ByteIterator;
-import site.ycsb.StringByteIterator;
 
 import java.util.HashMap;
 import java.util.HashSet;
