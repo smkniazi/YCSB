@@ -5,6 +5,7 @@ import com.mysql.clusterj.Session;
 import com.mysql.clusterj.annotation.Column;
 import com.mysql.clusterj.annotation.PersistenceCapable;
 import com.mysql.clusterj.annotation.PrimaryKey;
+import site.ycsb.ByteArrayByteIterator;
 import site.ycsb.ByteIterator;
 import site.ycsb.StringByteIterator;
 
@@ -48,9 +49,9 @@ public final class UserTable {
     void setKey(String key);
 
     @Column(name = FIELD0)
-    String getField0();
+    byte[] getField0();
 
-    void setField0(String val);
+    void setField0(byte[] val);
   }
 
   static UserTable.UserTableDTO createDTO(Session session, Map<String, ByteIterator> values) {
@@ -64,7 +65,7 @@ public final class UserTable {
 
   static void setFieldInDto(UserTableDTO dto, String field, ByteIterator bItr) {
     //TODO use reflections
-    String value = bItr.toString();
+    byte[] value = bItr.toArray();
     switch (field) {
     case UserTable.FIELD0:
       dto.setField0(value);
@@ -84,12 +85,9 @@ public final class UserTable {
 
   static ByteIterator readFieldFromDTO(String field, UserTable.UserTableDTO dto) {
     //TODO use reflections
-    String value = null;
+    byte[] value = null;
 
     switch (field) {
-    case UserTable.KEY:
-      value = dto.getKey();
-      break;
     case UserTable.FIELD0:
       value = dto.getField0();
       break;
@@ -97,6 +95,6 @@ public final class UserTable {
       throw new IllegalArgumentException("Data field not recognized. Field: " + field);
     }
 
-    return new StringByteIterator(value);
+    return new ByteArrayByteIterator(value, 0, value.length);
   }
 }
