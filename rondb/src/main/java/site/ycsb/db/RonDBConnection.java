@@ -72,7 +72,7 @@ public final class RonDBConnection {
   }
 
   public static synchronized  void closeConnection(RonDBConnection connection) {
-    connection.sessionFactory.close();
+//    connection.sessionFactory.close();
   }
 
   public Session getSession() {
