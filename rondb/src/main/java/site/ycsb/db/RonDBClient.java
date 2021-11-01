@@ -178,7 +178,9 @@ public class RonDBClient extends DB {
   public Status update(String table, String key, Map<String, ByteIterator> values) {
     Session session = connection.getSession();
     try {
-      UserTable.UserTableDTO row = session.find(UserTable.UserTableDTO.class, key);
+//      UserTable.UserTableDTO row = session.find(UserTable.UserTableDTO.class, key);
+      UserTable.UserTableDTO row = session.newInstance(UserTable.UserTableDTO.class, key);
+
       //update row
       for (String field : values.keySet()) {
         ByteIterator itr = values.get(field);
