@@ -29,6 +29,11 @@ LICENSE file.
   <name>RonDB Binding</name>
   <packaging>jar</packaging>
 
+  <properties>
+    <javaassist.version>3.27.0-GA</javaassist.version>
+    <rondb.clusterj.version>21.04.1</rondb.clusterj.version>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>com.mysql.ndb</groupId>
@@ -45,6 +50,12 @@ LICENSE file.
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-simple</artifactId>
       <version>1.7.21</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.javassist</groupId>
+      <artifactId>javassist</artifactId>
+      <version>${javaassist.version}</version>
     </dependency>
   </dependencies>
 

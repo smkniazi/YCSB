@@ -1,20 +1,22 @@
-/**
- * Copyright (c) 2012 YCSB contributors. All rights reserved.
- * <p>
+/*
+ * Copyright (c) 2021, Yahoo!, Inc. All rights reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you
  * may not use this file except in compliance with the License. You
  * may obtain a copy of the License at
- * <p>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * permissions and limitations under the License. See accompanying
  * LICENSE file.
- * <p>
- * RonDB client binding for YCSB.
+ */
+
+/**
+ * YCSB binding for <a href="https://rondb.com/">RonDB</a>.
  */
 
 /**
@@ -24,6 +26,7 @@
 package site.ycsb.db;
 
 import com.mysql.clusterj.ClusterJException;
+import com.mysql.clusterj.DynamicObject;
 import com.mysql.clusterj.Query;
 import com.mysql.clusterj.Session;
 import com.mysql.clusterj.query.Predicate;
@@ -35,8 +38,12 @@ import site.ycsb.ByteIterator;
 import site.ycsb.DB;
 import site.ycsb.DBException;
 import site.ycsb.Status;
+import site.ycsb.db.table.ClassGenerator;
+import site.ycsb.db.table.UserTableHelper;
+import site.ycsb.workloads.CoreWorkload;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,6 +56,11 @@ public class RonDBClient extends DB {
   private static Logger logger = LoggerFactory.getLogger(RonDBClient.class);
   private static RonDBConnection connection;
   private static Object lock = new Object();
+  private static ClassGenerator classGenerator = new ClassGenerator();
+  private String tableName = "usertable";
+  private long fieldCount = 1;
+  private Set<String> fieldNames;
+
 
   /**
    * Initialize any state for this DB.
@@ -56,13 +68,28 @@ public class RonDBClient extends DB {
    */
   public void init() throws DBException {
     synchronized (lock) {
+      fieldCount =
+          Long.parseLong(getProperties().getProperty(CoreWorkload.FIELD_COUNT_PROPERTY,
+              CoreWorkload.FIELD_COUNT_PROPERTY_DEFAULT));
+      final String fieldnameprefix = getProperties().getProperty(CoreWorkload.FIELD_NAME_PREFIX,
+          CoreWorkload.FIELD_NAME_PREFIX_DEFAULT);
+      fieldNames = new HashSet<>();
+      for (int i = 0; i < fieldCount; i++) {
+        fieldNames.add(fieldnameprefix + i);
+      }
+      tableName = getProperties().getProperty(CoreWorkload.TABLENAME_PROPERTY);
+      if (tableName == null) {
+        tableName = CoreWorkload.TABLENAME_PROPERTY_DEFAULT;
+      }
+      //logger.info("Settings: Table: " + tableName + " Field Count: " + fieldCount +
+      //    " Fields: " + Arrays.toString(fieldNames.toArray()));
+
       if (connection == null) {
         connection = RonDBConnection.connect(getProperties());
       }
       Session session = connection.getSession(); //initialize session for this thread
       connection.returnSession(session);
       System.out.println("Created a session for the thread");
-
     }
   }
 
@@ -93,14 +120,17 @@ public class RonDBClient extends DB {
                      Map<String, ByteIterator> result) {
     Session session = connection.getSession();
     try {
-      UserTable.UserTableDTO row = session.find(UserTable.UserTableDTO.class, key);
+
+      Class<DynamicObject> dbClass = (Class<DynamicObject>) UserTableHelper.getTableClass(
+          classGenerator, tableName);
+      DynamicObject row = session.find(dbClass, key);
       if (row == null) {
         logger.info("Read. Key: " + key + " Not Found.");
         return Status.NOT_FOUND;
       }
-      Set<String> toRead = fields != null ? fields : UserTable.ALL_FIELDS;
+      Set<String> toRead = fields != null ? fields : fieldNames;
       for (String field : toRead) {
-        result.put(field, UserTable.readFieldFromDTO(field, row));
+        result.put(field, UserTableHelper.readFieldFromDTO(field, row));
       }
       releaseDTO(session, row);
       if (logger.isDebugEnabled()) {
@@ -135,17 +165,20 @@ public class RonDBClient extends DB {
                      Vector<HashMap<String, ByteIterator>> result) {
     Session session = connection.getSession();
     try {
+      Class<DynamicObject> dbClass = (Class<DynamicObject>) UserTableHelper.getTableClass(
+          classGenerator, tableName);
       QueryBuilder qb = session.getQueryBuilder();
-      QueryDomainType<UserTable.UserTableDTO> dobj =
-          qb.createQueryDefinition(UserTable.UserTableDTO.class);
-      Predicate pred1 = dobj.get(UserTable.KEY).greaterEqual(dobj.param(UserTable.KEY + "Param"));
+      QueryDomainType<DynamicObject> dobj =
+          qb.createQueryDefinition(dbClass);
+      Predicate pred1 = dobj.get(UserTableHelper.KEY).greaterEqual(dobj.param(UserTableHelper.KEY +
+          "Param"));
       dobj.where(pred1);
-      Query<UserTable.UserTableDTO> query = session.createQuery(dobj);
-      query.setParameter(UserTable.KEY + "Param", startkey);
+      Query<DynamicObject> query = session.createQuery(dobj);
+      query.setParameter(UserTableHelper.KEY + "Param", startkey);
       query.setLimits(0, recordcount);
-      List<UserTable.UserTableDTO> scanResults = query.getResultList();
-      for (UserTable.UserTableDTO dto : scanResults) {
-        result.add(UserTable.convertDTO(dto, fields != null ? fields : UserTable.ALL_FIELDS));
+      List<DynamicObject> scanResults = query.getResultList();
+      for (DynamicObject dto : scanResults) {
+        result.add(UserTableHelper.readFieldsFromDTO(dto, fields != null ? fields : fieldNames));
         releaseDTO(session, dto);
       }
 
@@ -178,14 +211,8 @@ public class RonDBClient extends DB {
   public Status update(String table, String key, Map<String, ByteIterator> values) {
     Session session = connection.getSession();
     try {
-//      UserTable.UserTableDTO row = session.find(UserTable.UserTableDTO.class, key);
-      UserTable.UserTableDTO row = session.newInstance(UserTable.UserTableDTO.class, key);
-
-      //update row
-      for (String field : values.keySet()) {
-        ByteIterator itr = values.get(field);
-        UserTable.setFieldInDto(row, field, itr);
-      }
+      DynamicObject row = UserTableHelper.createDTO(classGenerator, session, tableName,
+          key, values);
       session.savePersistent(row);
       releaseDTO(session, row);
       if (logger.isDebugEnabled()) {
@@ -216,8 +243,8 @@ public class RonDBClient extends DB {
   public Status insert(String table, String key, Map<String, ByteIterator> values) {
     Session session = connection.getSession();
     try {
-      UserTable.UserTableDTO row = UserTable.createDTO(session, values);
-      row.setKey(key);
+      DynamicObject row = UserTableHelper.createDTO(classGenerator, session, tableName,
+          key, values);
       session.savePersistent(row);
       releaseDTO(session, row);
       if (logger.isDebugEnabled()) {
@@ -227,6 +254,7 @@ public class RonDBClient extends DB {
     } catch (Exception e) {
       if (!isSessionClosing(e)) {
         logger.warn("Insert Error: " + e);
+        e.printStackTrace();
         return Status.ERROR;
       }
       return Status.OK;
@@ -247,7 +275,8 @@ public class RonDBClient extends DB {
   public Status delete(String table, String key) {
     Session session = connection.getSession();
     try {
-      UserTable.UserTableDTO row = session.newInstance(UserTable.UserTableDTO.class, key);
+      DynamicObject row = UserTableHelper.createDTO(classGenerator, session, tableName,
+          key, null);
       session.deletePersistent(row);
       releaseDTO(session, row);
       return Status.OK;
@@ -262,7 +291,7 @@ public class RonDBClient extends DB {
     }
   }
 
-  private void releaseDTO(Session session, UserTable.UserTableDTO dto) {
+  private void releaseDTO(Session session, DynamicObject dto) {
     session.releaseCache(dto, dto.getClass());
   }
 
@@ -272,4 +301,5 @@ public class RonDBClient extends DB {
     }
     return false;
   }
+
 }
