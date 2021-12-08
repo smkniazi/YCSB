@@ -27,11 +27,12 @@ Create the following table in a database. Default DB name is ycsb which you can 
 `rondb.schema` property  .
 
 ```sql
-CREATE TABLE `usertable` (`key` varchar(255) NOT NULL, `field0` varchar(255) DEFAULT NULL,  PRIMARY KEY (`key`)) 
+CREATE TABLE `usertable` (`key` varchar(255) NOT NULL, `field0` varbinary(4096) DEFAULT NULL,  PRIMARY KEY (`key`)) 
 ```
 
-### 3. Install Java and Maven
+*Note* the column data type must be `varbinary`, the number of columns must be equal to `fieldcount`, and the columns' length must not be less than `fieldlength`
 
+### 3. Install Java and Maven
 
 
 ### 4. Set Up YCSB
@@ -44,7 +45,7 @@ Git clone YCSB and compile:
 
 ### 5. Provide RonDB Connection Parameters
     
-Set host, port, password, and fieldcount in the workload you plan to run. 
+Set host, port, and fieldcount in the workload you plan to run. 
 
 - `rondb.host`  Default : 127.0.0.1
 - `rondb.port`  Default : 1186
