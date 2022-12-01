@@ -66,7 +66,7 @@ public final class RonDBRestClient {
   private static final String RONDB_REST_API_USE_ASYNC_REQUESTS = "rondb.rest.api.use.async.requests";
 
   private boolean useRESTAPI = false;
-  private int readBatchSize = 1;
+  private int readBatchSize = 1; // Number of operations per batch
   private String restServerIP = "localhost";
   private int restServerPort = 5000;
   private String restAPIVersion = "0.1.0";
@@ -85,11 +85,10 @@ public final class RonDBRestClient {
     private Set<String> fields;
   }
 
-  private Map<Integer /*batch id*/, List<Operation>> operations = null;
+  private Map<Integer/*batch id*/, List<Operation>> operations = null;
   private Map<Integer, PKResponse> responses = null;
 
   private List<CyclicBarrier> barriers;
-
 
   private RonDBRestClient() {
   }
@@ -134,9 +133,6 @@ public final class RonDBRestClient {
 
         db = props.getProperty(RonDBConnection.SCHEMA, "ycsb");
 
-        pstr = props.getProperty(RONDB_REST_API_BATCH_SIZE, "1");
-        readBatchSize = Integer.parseInt(pstr);
-
         restServerIP = props.getProperty(RONDB_REST_SERVER_IP, "localhost");
 
         pstr = props.getProperty(RONDB_REST_SERVER_PORT, "5000");
@@ -146,24 +142,32 @@ public final class RonDBRestClient {
 
         restServerURI = "http://" + restServerIP + ":" + restServerPort + "/" + restAPIVersion;
 
-        pstr = props.getProperty(Client.THREAD_COUNT_PROPERTY, "1");
-        numThreads = Integer.parseInt(pstr);
-
         pstr = props.getProperty(RONDB_REST_API_USE_ASYNC_REQUESTS, "false");
         boolean async = Boolean.parseBoolean(pstr);
 
-        if(async) {
+        if (async) {
           myHttpClient = new MyHttpClientAsync(numThreads);
-        } else{
+        } else {
           myHttpClient = new MyHttpClientSync();
         }
 
+        /*
+         * Each batch has an equal amount of threads assigned to it
+         *  9 threads, batch-size: 3
+         *   --> 3 threads/operations per batch
+         *   --> 3 threads synchronize their operations into a single batch
+         */
         if (numThreads % readBatchSize != 0) {
           RonDBClient.getLogger().error("Wrong batch size. Total threads should be evenly " +
               "divisible by read batch size");
           System.exit(1);
         }
 
+        /*
+         * Essentially number of batches running at the same time
+         * Since each batch can be supported by multiple threads,
+         * some threads will need to share memory.
+         */
         int numBarriers = numThreads / readBatchSize;
         operations = new ConcurrentHashMap<>();
         responses = new ConcurrentHashMap<>();
@@ -222,11 +226,30 @@ public final class RonDBRestClient {
 //    }
   }
 
-  public Status read(Integer threadID, String table, String key, Set<String> fields,
-                     Map<String, ByteIterator> result) throws InterruptedException, BrokenBarrierException {
+  /*
+   * Since we allow multiple clients at once, we allow multiple
+   * reads at once. Technically, each client reads independently
+   * and does one read at a time.
+   * However, we try to batch together reads of multiple clients.
+   * We assign each operation to a batch/barrier, depending on the
+   * client/thread id. We then synchronize the barrier, so that
+   * the operations can be sent in a batch.
+  */
+  public Status read(
+    Integer threadID,
+    String table,
+    String key,
+    Set<String> fields,
+    Map<String, ByteIterator> result
+  ) throws InterruptedException, BrokenBarrierException {
 
-    int batchID = threadID / readBatchSize;
-    int barrierID = batchID;
+    /*
+     * Each client/thread is always assigned to the same batch/barrier id.
+     * We check here which barrier this is, so that we can synchronize
+     * the clients.
+     */
+    int batchID = threadID / readBatchSize; // this should round down
+    int barrierID = batchID; // barrier is simply a batch that is being processed and is shared by threads
 
     Operation op = new Operation();
     op.opId = maxID.incrementAndGet();
@@ -238,8 +261,9 @@ public final class RonDBRestClient {
     ops.add(op);
 
     try {
+      // This synchronizes the threads; A barrier has a runnable action, which will be executed here
       barriers.get(barrierID).await();
-      //barriers.get(barrierID).await(1, TimeUnit.SECONDS);
+      // barriers.get(barrierID).await(1, TimeUnit.SECONDS);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -249,18 +273,20 @@ public final class RonDBRestClient {
       if (response != null) {
         for (String column : fields) {
           String val = response.getData(op.opId, column);
-          result.put(column, new ByteArrayByteIterator(val.getBytes(), 0, val.length()));
+          result.put(
+            column,
+            new ByteArrayByteIterator(val.getBytes(), 0, val.length())
+          );
         }
         return Status.OK;
       } else {
-        //System.out.println("NOT FOUND");
+        // System.out.println("NOT FOUND");
         return Status.NOT_FOUND;
       }
     } finally {
       responses.remove(op.opId);
     }
   }
-
 
   private class Batcher implements Runnable {
     private int batchID;
@@ -276,14 +302,14 @@ public final class RonDBRestClient {
           String responseStr = batchRESTCall();
           processBatchResponse(responseStr);
         } catch (Exception e) {
-          RonDBClient.getLogger().trace("Error "+e);
+          RonDBClient.getLogger().trace("Error " + e);
         }
       } else {
         try {
           String responseStr = pkRESTCall();
           processPkResponse(responseStr);
         } catch (Exception e) {
-          RonDBClient.getLogger().trace("Error "+e);
+          RonDBClient.getLogger().trace("Error " + e);
         }
       }
     }
@@ -346,13 +372,15 @@ public final class RonDBRestClient {
             String colName = (String) op.fields.toArray()[f];
             pkRequest.addReadColumn(colName);
           }
-          BatchSubOperation subOperation = new BatchSubOperation(db + "/" + ops.get(i).table +
-              "/pk-read", pkRequest);
+          BatchSubOperation subOperation = new BatchSubOperation(
+            db + "/" + ops.get(i).table + "/pk-read",
+            pkRequest
+          );
           batch.addSubOperation(subOperation);
         }
 
         jsonReq = batch.toString();
-        //System.out.println(jsonReq);
+        // System.out.println(jsonReq);
 
         HttpPost req = new HttpPost(restServerURI + "/batch");
         StringEntity stringEntity = new StringEntity(jsonReq);
