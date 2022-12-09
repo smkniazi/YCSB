@@ -86,7 +86,7 @@ public final class RonDBRestClient {
     private Set<String> fields;
   }
 
-  private Map<Integer/*batch id*/, List<Operation>> operations = null;
+  private Map<Integer/* batch id */, List<Operation>> operations = null;
   private Map<Integer, PKResponse> responses = null;
 
   private List<CyclicBarrier> barriers;
@@ -154,9 +154,9 @@ public final class RonDBRestClient {
 
         /*
          * Each batch has an equal amount of threads assigned to it
-         *  9 threads, batch-size: 3
-         *   --> 3 threads/operations per batch
-         *   --> 3 threads synchronize their operations into a single batch
+         * 9 threads, batch-size: 3
+         * --> 3 threads/operations per batch
+         * --> 3 threads synchronize their operations into a single batch
          */
         if (numThreads % readBatchSize != 0) {
           RonDBClient.getLogger().error("Wrong batch size. Total threads should be evenly " +
@@ -222,11 +222,11 @@ public final class RonDBRestClient {
   }
 
   public void notifyAllBarriers() {
-//    synchronized (this) {
-//      for (int i = 0; i < barriers.size(); i++) {
-//        barriers.get(i).
-//      }
-//    }
+    // synchronized (this) {
+    // for (int i = 0; i < barriers.size(); i++) {
+    // barriers.get(i).
+    // }
+    // }
   }
 
   /*
@@ -237,14 +237,13 @@ public final class RonDBRestClient {
    * We assign each operation to a batch/barrier, depending on the
    * client/thread id. We then synchronize the barrier, so that
    * the operations can be sent in a batch.
-  */
+   */
   public Status read(
-    Integer threadID,
-    String table,
-    String key,
-    Set<String> fields,
-    Map<String, ByteIterator> result
-  ) throws InterruptedException, BrokenBarrierException {
+      Integer threadID,
+      String table,
+      String key,
+      Set<String> fields,
+      Map<String, ByteIterator> result) throws InterruptedException, BrokenBarrierException {
 
     /*
      * Each client/thread is always assigned to the same batch/barrier id.
@@ -264,7 +263,8 @@ public final class RonDBRestClient {
     ops.add(op);
 
     try {
-      // This synchronizes the threads; A barrier has a runnable action, which will be executed here
+      // This synchronizes the threads; A barrier has a runnable action, which will be
+      // executed here
       barriers.get(barrierID).await();
       // barriers.get(barrierID).await(1, TimeUnit.SECONDS);
     } catch (Exception e) {
@@ -277,9 +277,8 @@ public final class RonDBRestClient {
         for (String column : fields) {
           String val = response.getData(op.opId, column);
           result.put(
-            column,
-            new ByteArrayByteIterator(val.getBytes(), 0, val.length())
-          );
+              column,
+              new ByteArrayByteIterator(val.getBytes(), 0, val.length()));
         }
         return Status.OK;
       } else {
@@ -324,7 +323,7 @@ public final class RonDBRestClient {
 
       ops = operations.get(batchID);
       try {
-        //System.out.println("Batch ID: " + batchID + "   Length is " + ops.size());
+        // System.out.println("Batch ID: " + batchID + " Length is " + ops.size());
         if (ops.size() != 1) {
           throw new IllegalStateException("Batch size is expected to be 1");
         }
@@ -342,7 +341,7 @@ public final class RonDBRestClient {
           pkReq.addReadColumn(colName);
         }
         jsonReq = pkReq.toString();
-        //System.out.println(jsonReq);
+        // System.out.println(jsonReq);
 
         String uri = restServerURI + "/" + db + "/" + table + "/pk-read";
         HttpPost req = new HttpPost(uri);
@@ -376,9 +375,8 @@ public final class RonDBRestClient {
             pkRequest.addReadColumn(colName);
           }
           BatchSubOperation subOperation = new BatchSubOperation(
-            db + "/" + ops.get(i).table + "/pk-read",
-            pkRequest
-          );
+              db + "/" + ops.get(i).table + "/pk-read",
+              pkRequest);
           batch.addSubOperation(subOperation);
         }
 
