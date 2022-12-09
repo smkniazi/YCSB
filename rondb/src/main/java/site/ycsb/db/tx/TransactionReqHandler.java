@@ -38,7 +38,7 @@ public abstract class TransactionReqHandler {
 
   public abstract Status action() throws Exception;
 
-  public Status runTx(Session session, Class c, Object partKey) {
+  public Status runTx(Session session, Class<?> c, Object partKey) {
 
     boolean txCompleted = false;
     try {

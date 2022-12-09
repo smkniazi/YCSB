@@ -48,8 +48,7 @@ public class PKResponse {
   }
 
   private void parseStr() {
-    JsonParser parser = new JsonParser();
-    bodyJsonObj = parser.parse(bodyStr).getAsJsonObject();
+    bodyJsonObj = JsonParser.parseString(bodyStr).getAsJsonObject();
     parseJsonObj();
   }
 

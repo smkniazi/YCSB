@@ -173,7 +173,7 @@ public final class RonDBRestClient {
         operations = new ConcurrentHashMap<>();
         responses = new ConcurrentHashMap<>();
 
-        barriers = new ArrayList(numBarriers);
+        barriers = new ArrayList<CyclicBarrier>(numBarriers);
 
         for (int i = 0; i < numBarriers; i++) {
           operations.put(i, Collections.synchronizedList(new ArrayList<Operation>(readBatchSize)));

@@ -339,9 +339,10 @@ public class RonDBClient extends DB {
     return false;
   }
 
-  public Class getDTOClass() {
+  public Class<DynamicObject> getDTOClass() {
     try {
-      return (Class<DynamicObject>) UserTableHelper.getTableClass(classGenerator, tableName);
+      UserTableHelper.getTableClass(classGenerator, tableName);
+      return null;
     } catch (Exception e) {
       e.printStackTrace();
       return null;

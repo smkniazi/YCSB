@@ -43,8 +43,7 @@ public class BatchResponse {
   }
 
   public void parse() {
-    JsonParser parser = new JsonParser();
-    JsonArray jsonArray = parser.parse(bodyStr).getAsJsonArray();
+    JsonArray jsonArray = JsonParser.parseString(bodyStr).getAsJsonArray();
     Iterator<JsonElement> itr = jsonArray.iterator();
 
     while (itr.hasNext()) {
