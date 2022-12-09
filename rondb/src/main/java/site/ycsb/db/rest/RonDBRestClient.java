@@ -58,6 +58,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public final class RonDBRestClient {
 
+  // TODO: Add API key; Place into HTTP header under "X-API-KEY"
   private static final String RONDB_USE_REST_API = "rondb.use.rest.api";
   private static final String RONDB_REST_API_BATCH_SIZE = "rondb.rest.api.batch.size";
   private static final String RONDB_REST_SERVER_IP = "rondb.rest.server.ip";
@@ -201,8 +202,10 @@ public final class RonDBRestClient {
    */
   private void test() throws IOException {
     CloseableHttpResponse response = null;
+    String url = restServerURI + "/stat";
+    RonDBClient.getLogger().info("Running test against url " + url);
     try {
-      HttpGet req = new HttpGet(restServerURI + "/stat");
+      HttpGet req = new HttpGet(url);
       myHttpClient.execute(req);
     } finally {
       if (response != null) {
