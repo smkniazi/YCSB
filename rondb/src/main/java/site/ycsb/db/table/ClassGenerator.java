@@ -20,6 +20,8 @@
  */
 package site.ycsb.db.table;
 
+import javassist.CannotCompileException;
+import javassist.NotFoundException;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
@@ -38,7 +40,7 @@ public class ClassGenerator implements Serializable {
     pool = ClassPool.getDefault();
   }
 
-  public Class<?> generateClass(String tableName) throws Exception {
+  public Class<?> generateClass(String tableName) throws NotFoundException, CannotCompileException {
     if (tableObj != null) {
       return tableObj;
     }
