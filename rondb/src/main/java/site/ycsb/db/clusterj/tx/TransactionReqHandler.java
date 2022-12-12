@@ -15,7 +15,7 @@
  * LICENSE file.
  */
 
-package site.ycsb.db.tx;
+package site.ycsb.db.clusterj.tx;
 
 import com.mysql.clusterj.ClusterJException;
 import com.mysql.clusterj.Session;

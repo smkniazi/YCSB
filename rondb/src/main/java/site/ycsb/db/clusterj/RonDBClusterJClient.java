@@ -33,11 +33,10 @@ import site.ycsb.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import site.ycsb.DBException;
-import site.ycsb.db.table.UserTableHelper;
-import site.ycsb.db.tx.TransactionReqHandler;
-import site.ycsb.workloads.CoreWorkload;
-
+import site.ycsb.db.clusterj.tx.TransactionReqHandler;
 import site.ycsb.db.table.ClassGenerator;
+import site.ycsb.db.table.UserTableHelper;
+import site.ycsb.workloads.CoreWorkload;
 
 import java.util.List;
 import java.util.Map;
@@ -56,7 +55,7 @@ public final class RonDBClusterJClient {
   private static ClassGenerator classGenerator = new ClassGenerator();
 
   public RonDBClusterJClient(Properties properties) throws DBException {
-    
+
     // Setting static class properties in parallel
     synchronized (lock) {
       if (connection == null) {
