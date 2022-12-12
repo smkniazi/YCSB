@@ -18,15 +18,27 @@
 /**
  * YCSB binding for <a href="https://rondb.com/">RonDB</a>.
  */
-package site.ycsb.db.rest.ds;
+package site.ycsb.db.http.ds;
 
-import org.apache.http.client.methods.HttpRequestBase;
-import site.ycsb.db.rest.MyHttpException;
 
 /**
- * MyHttpClient.
+ * Read Column.
  */
+public class ReadColumn {
+  private String colName;
+  public ReadColumn(String colName){
+    this.colName = colName;
+  }
 
-public abstract class MyHttpClient {
-  public abstract String execute(HttpRequestBase req) throws MyHttpException;
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("{");
+    sb.append("\"column\":");
+    sb.append("\"");
+    sb.append(colName);
+    sb.append("\"");
+    sb.append("}");
+    return sb.toString();
+  }
 }

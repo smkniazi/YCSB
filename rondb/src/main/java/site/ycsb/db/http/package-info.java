@@ -17,28 +17,8 @@
 
 /**
  * YCSB binding for <a href="https://rondb.com/">RonDB</a>.
+ * 
+ * This package bundles all code required for both HTTP clients: the REST API 
+ * client and the gRPC client.
  */
-package site.ycsb.db.rest.ds;
-
-
-/**
- * Read Column.
- */
-public class ReadColumn {
-  private String colName;
-  public ReadColumn(String colName){
-    this.colName = colName;
-  }
-
-  @Override
-  public String toString() {
-    StringBuilder sb = new StringBuilder();
-    sb.append("{");
-    sb.append("\"column\":");
-    sb.append("\"");
-    sb.append(colName);
-    sb.append("\"");
-    sb.append("}");
-    return sb.toString();
-  }
-}
+package site.ycsb.db.http;

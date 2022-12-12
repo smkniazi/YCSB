@@ -18,34 +18,16 @@
 /**
  * YCSB binding for <a href="https://rondb.com/">RonDB</a>.
  */
-package site.ycsb.db.rest.ds;
+package site.ycsb.db.http.ds;
+
+import org.apache.http.client.methods.HttpRequestBase;
+
+import site.ycsb.db.http.MyHttpException;
 
 /**
- * Filter.
+ * MyHttpClient.
  */
-public class Filter {
-  private String colName;
-  private String value;
 
-  public Filter(String colName, String value) {
-    this.colName = colName;
-    this.value = value;
-  }
-
-  @Override
-  public String toString() {
-    StringBuilder sb = new StringBuilder();
-    sb.append("{");
-    sb.append("\"column\":");
-    sb.append("\"");
-    sb.append(colName);
-    sb.append("\"");
-    sb.append(",");
-    sb.append("\"value\":");
-    sb.append("\"");
-    sb.append(value);
-    sb.append("\"");
-    sb.append("}");
-    return  sb.toString();
-  }
+public abstract class MyHttpClient {
+  public abstract String execute(HttpRequestBase req) throws MyHttpException;
 }

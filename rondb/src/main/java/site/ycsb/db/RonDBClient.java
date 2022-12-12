@@ -32,7 +32,7 @@ import site.ycsb.DB;
 import site.ycsb.DBException;
 import site.ycsb.Status;
 import site.ycsb.db.clusterj.RonDBClusterJClient;
-import site.ycsb.db.rest.RonDBRestClient;
+import site.ycsb.db.http.RonDBRestClient;
 import site.ycsb.workloads.CoreWorkload;
 
 import java.io.IOException;

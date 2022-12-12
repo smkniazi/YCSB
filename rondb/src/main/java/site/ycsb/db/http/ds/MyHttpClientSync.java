@@ -19,14 +19,15 @@
  * YCSB binding for <a href="https://rondb.com/">RonDB</a>.
  */
 
-package site.ycsb.db.rest.ds;
+package site.ycsb.db.http.ds;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import site.ycsb.db.rest.MyHttpException;
+
+import site.ycsb.db.http.MyHttpException;
 
 import java.io.IOException;
 

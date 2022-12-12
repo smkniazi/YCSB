@@ -19,7 +19,7 @@
  * YCSB binding for <a href="https://rondb.com/">RonDB</a>.
  * RonDB client binding for YCSB.
  */
-package site.ycsb.db.rest;
+package site.ycsb.db.http;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -32,14 +32,14 @@ import site.ycsb.Status;
 import site.ycsb.db.RonDBClient;
 import site.ycsb.db.clusterj.RonDBConnection;
 import site.ycsb.db.clusterj.table.UserTableHelper;
-import site.ycsb.db.rest.ds.BatchRequest;
-import site.ycsb.db.rest.ds.BatchResponse;
-import site.ycsb.db.rest.ds.BatchSubOperation;
-import site.ycsb.db.rest.ds.MyHttpClientAsync;
-import site.ycsb.db.rest.ds.MyHttpClientSync;
-import site.ycsb.db.rest.ds.MyHttpClient;
-import site.ycsb.db.rest.ds.PKRequest;
-import site.ycsb.db.rest.ds.PKResponse;
+import site.ycsb.db.http.ds.BatchRequest;
+import site.ycsb.db.http.ds.BatchResponse;
+import site.ycsb.db.http.ds.BatchSubOperation;
+import site.ycsb.db.http.ds.MyHttpClient;
+import site.ycsb.db.http.ds.MyHttpClientAsync;
+import site.ycsb.db.http.ds.MyHttpClientSync;
+import site.ycsb.db.http.ds.PKRequest;
+import site.ycsb.db.http.ds.PKResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
