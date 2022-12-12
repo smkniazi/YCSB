@@ -18,7 +18,7 @@
 /**
  * YCSB binding for <a href="https://rondb.com/">RonDB</a>.
  */
-package site.ycsb.db.table;
+package site.ycsb.db.clusterj.table;
 
 import com.mysql.clusterj.DynamicObject;
 

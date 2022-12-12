@@ -33,9 +33,9 @@ import site.ycsb.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import site.ycsb.DBException;
+import site.ycsb.db.clusterj.table.ClassGenerator;
+import site.ycsb.db.clusterj.table.UserTableHelper;
 import site.ycsb.db.clusterj.tx.TransactionReqHandler;
-import site.ycsb.db.table.ClassGenerator;
-import site.ycsb.db.table.UserTableHelper;
 import site.ycsb.workloads.CoreWorkload;
 
 import java.util.List;
