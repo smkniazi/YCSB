@@ -52,8 +52,11 @@ public class RonDBClient extends DB {
   private RonDBRestClient restApiClient;
 
   private static Object lock = new Object();
+  
+  private static final String RONDB_USE_GRPC = "rondb.use.grpc";
   private static final String RONDB_USE_REST_API = "rondb.use.rest.api";
-  private static boolean useRESTAPI = false;
+  private static boolean useRESTAPI;
+  private static boolean useGRPC;
   private long fieldCount;
   private Set<String> fieldNames;
   private static int maxThreadID = 0;
@@ -72,6 +75,12 @@ public class RonDBClient extends DB {
       threadID = maxThreadID++;
 
       useRESTAPI = Boolean.parseBoolean(properties.getProperty(RONDB_USE_REST_API, "false"));
+      useGRPC = Boolean.parseBoolean(properties.getProperty(RONDB_USE_GRPC, "false"));
+      if (useRESTAPI && useGRPC) {
+        logger.error("cannot use both REST API and GRPC");
+        System.exit(1);
+      }
+      
 
       // It can apparently happen that the methods omit the parameter "fields", so
       // we're just saving it here
