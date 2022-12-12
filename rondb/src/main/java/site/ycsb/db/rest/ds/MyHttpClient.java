@@ -24,9 +24,9 @@ import org.apache.http.client.methods.HttpRequestBase;
 import site.ycsb.db.rest.MyHttpException;
 
 /**
- * MyHttpClinet.
+ * MyHttpClient.
  */
 
-public abstract class MyHttpClinet {
+public abstract class MyHttpClient {
   public abstract String execute(HttpRequestBase req) throws MyHttpException;
 }

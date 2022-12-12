@@ -37,7 +37,7 @@ import java.util.concurrent.Future;
 /**
  * MyHttpClientAsync.
  */
-public class MyHttpClientAsync extends MyHttpClinet {
+public class MyHttpClientAsync extends MyHttpClient {
   private CloseableHttpAsyncClient client;
 
   public MyHttpClientAsync(int numThreads) throws IOReactorException {

@@ -36,7 +36,7 @@ import site.ycsb.db.rest.ds.BatchResponse;
 import site.ycsb.db.rest.ds.BatchSubOperation;
 import site.ycsb.db.rest.ds.MyHttpClientAsync;
 import site.ycsb.db.rest.ds.MyHttpClientSync;
-import site.ycsb.db.rest.ds.MyHttpClinet;
+import site.ycsb.db.rest.ds.MyHttpClient;
 import site.ycsb.db.rest.ds.PKRequest;
 import site.ycsb.db.rest.ds.PKResponse;
 import site.ycsb.db.table.UserTableHelper;
@@ -77,7 +77,7 @@ public final class RonDBRestClient {
   private int restServerPort;
   private String restAPIVersion;
   private String restServerURI;
-  private MyHttpClinet myHttpClient;
+  private MyHttpClient myHttpClient;
 
   private static AtomicInteger maxID = new AtomicInteger(0);
 

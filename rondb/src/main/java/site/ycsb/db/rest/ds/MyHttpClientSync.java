@@ -33,7 +33,7 @@ import java.io.IOException;
 /**
  * MyHttpClientSync.
  */
-public class MyHttpClientSync extends MyHttpClinet {
+public class MyHttpClientSync extends MyHttpClient {
 
   private ThreadLocal<CloseableHttpClient> httpClients = new ThreadLocal<>();
 
