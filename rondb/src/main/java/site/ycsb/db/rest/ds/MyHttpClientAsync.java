@@ -42,14 +42,12 @@ public class MyHttpClientAsync extends MyHttpClient {
 
   public MyHttpClientAsync(int numThreads) throws IOReactorException {
     ConnectingIOReactor ioReactor = new DefaultConnectingIOReactor();
-    PoolingNHttpClientConnectionManager cm =
-        new PoolingNHttpClientConnectionManager(ioReactor);
+    PoolingNHttpClientConnectionManager cm = new PoolingNHttpClientConnectionManager(ioReactor);
     cm.setMaxTotal(numThreads);
     cm.setDefaultMaxPerRoute(numThreads);
     client = HttpAsyncClients.custom().setConnectionManager(cm).build();
     client.start();
   }
-
 
   @Override
   public String execute(HttpRequestBase req) throws MyHttpException {

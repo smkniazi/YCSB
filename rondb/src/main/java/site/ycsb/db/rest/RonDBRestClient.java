@@ -68,6 +68,8 @@ public final class RonDBRestClient {
   private static final String RONDB_REST_SERVER_IP = "rondb.rest.server.ip";
   private static final String RONDB_REST_SERVER_PORT = "rondb.rest.server.port";
   private static final String RONDB_REST_API_VERSION = "rondb.rest.api.version";
+
+  // TODO: Add documentation on this
   private static final String RONDB_REST_API_USE_ASYNC_REQUESTS = "rondb.rest.api.use.async.requests";
 
   private int readBatchSize; // Number of operations per batch
