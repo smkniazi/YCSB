@@ -31,8 +31,8 @@ import site.ycsb.ByteIterator;
 import site.ycsb.DB;
 import site.ycsb.DBException;
 import site.ycsb.Status;
-import site.ycsb.db.clusterj.RonDBClusterJClient;
-import site.ycsb.db.http.RonDBRestClient;
+import site.ycsb.db.clusterj.ClusterJClient;
+import site.ycsb.db.http.RestApiClient;
 import site.ycsb.workloads.CoreWorkload;
 
 import java.io.IOException;
@@ -48,8 +48,8 @@ import java.util.Properties;
  */
 public class RonDBClient extends DB {
   protected static Logger logger = LoggerFactory.getLogger(RonDBClient.class);
-  private RonDBClusterJClient clusterJClient;
-  private RonDBRestClient restApiClient;
+  private ClusterJClient clusterJClient;
+  private RestApiClient restApiClient;
 
   private static Object lock = new Object();
   
@@ -94,9 +94,9 @@ public class RonDBClient extends DB {
       }
     }
 
-    clusterJClient = new RonDBClusterJClient(properties);
+    clusterJClient = new ClusterJClient(properties);
     try {
-      restApiClient = new RonDBRestClient(properties);
+      restApiClient = new RestApiClient(properties);
     } catch (IOException e) {
       logger.error("error creating RonDB REST API client " + e);
       e.printStackTrace();
@@ -109,7 +109,7 @@ public class RonDBClient extends DB {
    * Called once per DB instance; there is one DB instance per client thread.
    */
   public void cleanup() throws DBException {
-    RonDBClusterJClient.cleanup();
+    ClusterJClient.cleanup();
   }
 
   /**

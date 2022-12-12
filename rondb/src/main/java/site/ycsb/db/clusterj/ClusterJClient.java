@@ -48,13 +48,13 @@ import java.util.HashMap;
 /**
  * This is the ClusterJ client for RonDB.
  */
-public final class RonDBClusterJClient {
-  protected static Logger logger = LoggerFactory.getLogger(RonDBClusterJClient.class);
+public final class ClusterJClient {
+  protected static Logger logger = LoggerFactory.getLogger(ClusterJClient.class);
   private static Object lock = new Object();
   private static RonDBConnection connection;
   private static ClassGenerator classGenerator = new ClassGenerator();
 
-  public RonDBClusterJClient(Properties properties) throws DBException {
+  public ClusterJClient(Properties properties) throws DBException {
 
     // Setting static class properties in parallel
     synchronized (lock) {

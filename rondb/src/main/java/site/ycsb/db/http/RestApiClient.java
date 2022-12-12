@@ -58,11 +58,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * RonDB res client wrapper.
  */
-public final class RonDBRestClient {
+public final class RestApiClient {
 
   // TODO: Add API key; Place into HTTP header under "X-API-KEY"
 
-  protected static Logger logger = LoggerFactory.getLogger(RonDBRestClient.class);
+  protected static Logger logger = LoggerFactory.getLogger(RestApiClient.class);
 
   private static final String RONDB_REST_API_BATCH_SIZE = "rondb.rest.api.batch.size";
   private static final String RONDB_REST_SERVER_IP = "rondb.rest.server.ip";
@@ -95,7 +95,7 @@ public final class RonDBRestClient {
 
   private List<CyclicBarrier> barriers;
 
-  public RonDBRestClient(Properties props) throws IOException {
+  public RestApiClient(Properties props) throws IOException {
 
     readBatchSize = Integer.parseInt(props.getProperty(RONDB_REST_API_BATCH_SIZE, "1"));
     numThreads = Integer.parseInt(props.getProperty(Client.THREAD_COUNT_PROPERTY, "1"));
