@@ -52,7 +52,7 @@ public class RonDBClient extends DB {
   private RestApiClient restApiClient;
 
   private static Object lock = new Object();
-  
+
   private static final String RONDB_USE_GRPC = "rondb.use.grpc";
   private static final String RONDB_USE_REST_API = "rondb.use.rest.api";
   private static boolean useRESTAPI;
@@ -80,7 +80,6 @@ public class RonDBClient extends DB {
         logger.error("cannot use both REST API and GRPC");
         System.exit(1);
       }
-      
 
       // It can apparently happen that the methods omit the parameter "fields", so
       // we're just saving it here
@@ -95,12 +94,14 @@ public class RonDBClient extends DB {
     }
 
     clusterJClient = new ClusterJClient(properties);
-    try {
-      restApiClient = new RestApiClient(properties);
-    } catch (IOException e) {
-      logger.error("error creating RonDB REST API client " + e);
-      e.printStackTrace();
-      System.exit(1);
+    if (useRESTAPI) {
+      try {
+        restApiClient = new RestApiClient(properties);
+      } catch (IOException e) {
+        logger.error("error creating RonDB REST API client " + e);
+        e.printStackTrace();
+        System.exit(1);
+      }
     }
   }
 
