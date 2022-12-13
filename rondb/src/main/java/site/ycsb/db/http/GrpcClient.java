@@ -66,6 +66,8 @@ public final class GrpcClient {
   private static final String RONDB_REST_SERVER_PORT = "rondb.rest.server.port";
   private static final String RONDB_REST_API_VERSION = "rondb.rest.api.version";
 
+  private static Object lock = new Object();
+
   private String databaseName;
   private String grpcServerIP;
   private int grpcServerPort;
@@ -79,7 +81,6 @@ public final class GrpcClient {
   private static AtomicInteger maxID = new AtomicInteger(0);
 
   public GrpcClient(Properties props) throws IOException {
-
     databaseName = props.getProperty(RonDBConnection.SCHEMA, "ycsb");
     grpcServerIP = props.getProperty(RONDB_REST_SERVER_IP, "localhost");
     grpcServerPort = Integer.parseInt(props.getProperty(RONDB_REST_SERVER_PORT, "5000"));
@@ -87,10 +88,14 @@ public final class GrpcClient {
     String grpcServerAddress = grpcServerIP + ":" + grpcServerPort;
 
     basePkReadBuilder = PKReadRequestProto.newBuilder().setAPIKey("").setDB(databaseName);
-
-    channel = Grpc.newChannelBuilder(grpcServerAddress, InsecureChannelCredentials.create()).build();
-    blockingStub = RonDBRESTGrpc.newBlockingStub(channel);
-
+    synchronized (lock) {
+      if (channel == null) {
+        channel = Grpc.newChannelBuilder(grpcServerAddress, InsecureChannelCredentials.create()).build();
+      }
+      if (blockingStub == null) {
+        blockingStub = RonDBRESTGrpc.newBlockingStub(channel);
+      }
+    }
     test();
   }
 
@@ -133,7 +138,7 @@ public final class GrpcClient {
       e.printStackTrace();
       System.exit(1);
     }
-    
+
     if (response == null || !response.isInitialized()) {
       logger.error("gRPC is empty");
       return Status.NOT_FOUND;
