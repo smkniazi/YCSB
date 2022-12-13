@@ -47,7 +47,7 @@ public class ClassGenerator implements Serializable {
 
     synchronized (this) {
       if (tableObj == null) {
-        CtClass originalClass = pool.get("site.ycsb.db.table.DBTable");
+        CtClass originalClass = pool.get("site.ycsb.db.clusterj.table.DBTable");
         originalClass.defrost();
 
         String methodCode = "public String table() { return \"" + tableName + "\"; }";
