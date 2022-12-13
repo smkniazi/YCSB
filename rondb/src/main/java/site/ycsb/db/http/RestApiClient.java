@@ -67,9 +67,9 @@ public final class RestApiClient {
   private static final String RONDB_REST_API_BATCH_SIZE = "rondb.rest.api.batch.size";
   private static final String RONDB_REST_SERVER_IP = "rondb.rest.server.ip";
   private static final String RONDB_REST_SERVER_PORT = "rondb.rest.server.port";
-  private static final String RONDB_REST_API_VERSION = "rondb.rest.api.version";
+  private static final String RONDB_REST_API_VERSION = "rondb.rest.api.version";  // TODO: Hard-code this
 
-  // TODO: Add documentation on this
+  // TODO: Add documentation on this; this should only make a difference if MyHttpClient is static?
   private static final String RONDB_REST_API_USE_ASYNC_REQUESTS = "rondb.rest.api.use.async.requests";
 
   private int readBatchSize; // Number of operations per batch
