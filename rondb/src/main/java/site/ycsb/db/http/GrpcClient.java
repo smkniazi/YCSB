@@ -64,7 +64,6 @@ public final class GrpcClient {
 
   private static final String RONDB_REST_SERVER_IP = "rondb.rest.server.ip";
   private static final String RONDB_REST_SERVER_PORT = "rondb.rest.server.port";
-  private static final String RONDB_REST_API_VERSION = "rondb.rest.api.version";
 
   private static Object lock = new Object();
 
@@ -76,15 +75,20 @@ public final class GrpcClient {
   private ReadColumnProto.Builder readFieldsBuilder;
 
   private static ManagedChannel channel;
+  // TODO: Use AsyncStub instead to use it in parallel
   private static RonDBRESTBlockingStub blockingStub;
 
   private static AtomicInteger maxID = new AtomicInteger(0);
 
   public GrpcClient(Properties props) throws IOException {
     databaseName = props.getProperty(RonDBConnection.SCHEMA, "ycsb");
-    grpcServerIP = props.getProperty(RONDB_REST_SERVER_IP, "localhost");
+    
+    // In case we're e.g. using container names: https://github.com/grpc/grpc-java/issues/4564#issuecomment-396817986
+    String grpcServerHostname = props.getProperty(RONDB_REST_SERVER_IP, "localhost");
+    java.net.InetAddress inetAddress = java.net.InetAddress.getByName(grpcServerHostname);
+    grpcServerIP = inetAddress.getHostAddress();
+    
     grpcServerPort = Integer.parseInt(props.getProperty(RONDB_REST_SERVER_PORT, "5000"));
-    // grpcAPIVersion = props.getProperty(RONDB_REST_API_VERSION, "0.1.0");
     String grpcServerAddress = grpcServerIP + ":" + grpcServerPort;
 
     basePkReadBuilder = PKReadRequestProto.newBuilder().setAPIKey("").setDB(databaseName);
@@ -107,7 +111,10 @@ public final class GrpcClient {
     try {
       StatResponseProto response = blockingStub.stat(StatRequestProto.newBuilder().build());
       if (response != null) {
-        logger.info(response.toString());
+        logger.info("response for stat endpoint: " + response.toString());
+      } else {
+        logger.error("response is null for Stat endpoint!");
+        System.exit(1);
       }
     } catch (StatusRuntimeException e) {
       logger.warn("RPC failed: {0}", e.getStatus());
@@ -130,6 +137,8 @@ public final class GrpcClient {
     for (String field : fields) {
       pkReadBuilder = pkReadBuilder.addReadColumns(readFieldsBuilder.setColumn(field).build());
     }
+
+    logger.warn("Making pkReadRequest with operation number : " + operationID);
     PKReadResponseProto response = PKReadResponseProto.newBuilder().build();
     try {
       PKReadRequestProto pkRead = pkReadBuilder.build();
@@ -143,7 +152,7 @@ public final class GrpcClient {
       logger.error("gRPC is empty");
       return Status.NOT_FOUND;
     } else {
-      logger.info(response.toString());
+      logger.warn("response for pkRead: " + response.toString());
     }
 
     Map<String, ColumnValueProto> dataMap = response.getDataMap();
