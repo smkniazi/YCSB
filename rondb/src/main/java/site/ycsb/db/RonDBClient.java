@@ -33,6 +33,7 @@ import site.ycsb.DBException;
 import site.ycsb.Status;
 import site.ycsb.db.clusterj.ClusterJClient;
 import site.ycsb.db.http.RestApiClient;
+import site.ycsb.db.http.GrpcClient;
 import site.ycsb.workloads.CoreWorkload;
 
 import java.io.IOException;
@@ -50,6 +51,7 @@ public class RonDBClient extends DB {
   protected static Logger logger = LoggerFactory.getLogger(RonDBClient.class);
   private ClusterJClient clusterJClient;
   private RestApiClient restApiClient;
+  private GrpcClient grpcClient;
 
   private static Object lock = new Object();
 
@@ -102,6 +104,14 @@ public class RonDBClient extends DB {
         e.printStackTrace();
         System.exit(1);
       }
+    } else if (useGRPC) {
+      try {
+        grpcClient = new GrpcClient(properties);
+      } catch (IOException e) {
+        logger.error("error creating RonDB gRPC client " + e);
+        e.printStackTrace();
+        System.exit(1);
+      }
     }
   }
 
@@ -129,6 +139,8 @@ public class RonDBClient extends DB {
     try {
       if (useRESTAPI) {
         return restApiClient.read(threadID, table, key, fieldsToRead, result);
+      } else if (useGRPC) {
+        return grpcClient.read(threadID, table, key, fieldsToRead, result);
       } else {
         return clusterJClient.read(table, key, fieldsToRead, result);
       }
