@@ -15,38 +15,42 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-syntax = "proto3";
+syntax = "proto2";
 
 package grpcserver.v1;
 
 option java_multiple_files = true;
 option java_package = "com.rondb.grpcserver";
-option java_outer_classname = "GrpcProto";
+option java_outer_classname = "RonDBGrpcProto";
 
 //__________________  PK Read Operation __________________
 message FilterProto {
-  string Column = 1;
-  string Value = 2;
+  required string Column = 1;
+  required string Value = 2;
 }
 
 message ReadColumnProto {
-  string Column = 1;
+  required string Column = 1;
   optional string DataReturnType = 2;
 }
 
+// TODO: Can place ApiKey into metadata
 message PKReadRequestProto {
   optional string APIKey = 1;
-  string DB = 2;
-  string Table = 3;
+  required string DB = 2;
+  required string Table = 3;
   repeated FilterProto Filters = 4;
   repeated ReadColumnProto ReadColumns = 5;
   optional string OperationID = 6;
 }
 
+// TODO: Could use bytes as type here
+// TODO: Why not place all of map<string, ColumnValueProto> Data here?
 message ColumnValueProto {
   optional string Name = 1;
 }
 
+// TODO: Could use enum for code (or simply grpc code)
 message PKReadResponseProto {
   optional string OperationID = 1;
   optional int32 code = 2;
@@ -66,24 +70,24 @@ message BatchResponseProto {
 //__________________  Stat Operation _________________________
 
 message MemoryStatsProto {
-  int64 AllocationsCount = 1;
-  int64 DeallocationsCount = 2;
-  int64 BuffersCount = 3;
-  int64 FreeBuffers = 4;
+  required int64 AllocationsCount = 1;
+  required int64 DeallocationsCount = 2;
+  required int64 BuffersCount = 3;
+  required int64 FreeBuffers = 4;
 }
 
 message RonDBStatsProto {
-  int64 NdbObjectsCreationCount = 1;
-  int64 NdbObjectsDeletionCount = 2;
-  int64 NdbObjectsTotalCount = 3;
-  int64 NdbObjectsFreeCount = 4;
+  required int64 NdbObjectsCreationCount = 1;
+  required int64 NdbObjectsDeletionCount = 2;
+  required int64 NdbObjectsTotalCount = 3;
+  required int64 NdbObjectsFreeCount = 4;
 }
 
 message StatRequestProto {}
 
 message StatResponseProto {
-  MemoryStatsProto MemoryStats = 1;
-  RonDBStatsProto RonDBStats = 2;
+  required MemoryStatsProto MemoryStats = 1;
+  required RonDBStatsProto RonDBStats = 2;
 }
 
 //__________________  Service ______________________________
@@ -92,4 +96,3 @@ service RonDBREST {
   rpc Batch(BatchRequestProto) returns (BatchResponseProto);
   rpc Stat(StatRequestProto) returns (StatResponseProto);
 }
-
