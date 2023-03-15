@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Yahoo!, Inc. All rights reserved.
+ * Copyright (c) 2023, Hopsworks AB. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you
  * may not use this file except in compliance with the License. You
@@ -18,14 +18,5 @@
 /**
  * YCSB binding for <a href="https://rondb.com/">RonDB</a>.
  */
-package site.ycsb.db.table;
+package site.ycsb.db.http.ds;
 
-import com.mysql.clusterj.DynamicObject;
-
-import java.io.Serializable;
-
-/**
- * DBTable.
- */
-public class DBTable extends DynamicObject implements Serializable {
-}

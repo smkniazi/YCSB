@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2016 YCSB contributors. All rights reserved.
- *
+ * Copyright (c) 2011 YCSB++ project, 2014-2023 YCSB contributors.
+ * Copyright (c) 2023, Hopsworks AB. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License"); you
  * may not use this file except in compliance with the License. You
  * may obtain a copy of the License at
@@ -22,11 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.Vector;
+import java.util.*;
 import java.util.zip.GZIPInputStream;
 
 import javax.ws.rs.HttpMethod;
@@ -103,6 +99,7 @@ public class RestClient extends DB {
 
   @Override
   public Status read(String table, String endpoint, Set<String> fields, Map<String, ByteIterator> result) {
+    System.out.println("read req ");
     int responseCode;
     try {
       responseCode = httpGet(urlPrefix + endpoint, result);
@@ -114,6 +111,13 @@ public class RestClient extends DB {
             .append(" | Response Code: ").append(responseCode).toString());
     }
     return getStatus(responseCode);
+  }
+
+  @Override
+  public Status batchRead(String table, List<String> keys, List<Set<String>> fields,
+                          HashMap<String, HashMap<String, ByteIterator>> result) {
+    System.out.println("batchread req ");
+    throw  new UnsupportedOperationException("Batch reads are not yet supported");
   }
 
   @Override

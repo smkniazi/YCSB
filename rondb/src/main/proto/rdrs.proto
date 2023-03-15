@@ -1,0 +1,99 @@
+/*
+ * Copyright (c) 2023, Hopsworks AB. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * may not use this file except in compliance with the License. You
+ * may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * permissions and limitations under the License. See accompanying
+ * LICENSE file.
+ */
+
+syntax = "proto2";
+ 
+package grpcserver.v1;
+ 
+option go_package = "./pkg/api";
+option java_multiple_files = true;
+option java_package = "com.rondb.grpcserver";
+option java_outer_classname = "RonDBGrpcProto";
+
+//________________________  Ping _________________________
+
+message Empty {}
+
+//__________________  PK Read Operation __________________
+message FilterProto {
+  required string Column = 1;
+  required string Value = 2;
+}
+
+message ReadColumnProto {
+  required string Column = 1;
+  optional string DataReturnType = 2 [default="default"];
+}
+
+message PKReadRequestProto {
+  required string DB = 1;
+  required string Table = 2;
+  repeated FilterProto Filters = 3;
+  repeated ReadColumnProto ReadColumns = 4;
+  optional string OperationID = 5;
+}
+
+message ColumnValueProto {
+  optional string Name = 1;
+}
+
+message PKReadResponseProto {
+  optional string OperationID = 1;
+  optional int32 code = 2;
+  map<string, ColumnValueProto> Data = 3;
+}
+
+//__________________  Batch Operation ________________________
+message BatchRequestProto {
+  repeated PKReadRequestProto operations = 1;
+}
+
+message BatchResponseProto {
+  repeated PKReadResponseProto responses = 1;
+}
+
+//__________________  Stat Operation _________________________
+
+message MemoryStatsProto {
+  required int64 AllocationsCount = 1;
+  required int64 DeallocationsCount = 2;
+  required int64 BuffersCount = 3;
+  required int64 FreeBuffers = 4;
+}
+
+message RonDBStatsProto {
+  required int64 NdbObjectsCreationCount = 1;
+  required int64 NdbObjectsDeletionCount = 2;
+  required int64 NdbObjectsTotalCount = 3;
+  required int64 NdbObjectsFreeCount = 4;
+}
+
+message StatRequestProto {}
+
+message StatResponseProto {
+  required MemoryStatsProto MemoryStats = 1;
+  required RonDBStatsProto RonDBStats = 2;
+}
+
+// TODO: Rename service; REST is misleading
+//__________________  Service ______________________________
+service RonDBREST {
+  rpc Ping(Empty) returns (Empty) {}
+  rpc PKRead(PKReadRequestProto) returns (PKReadResponseProto);
+  rpc Batch(BatchRequestProto) returns (BatchResponseProto);
+  rpc Stat(StatRequestProto) returns (StatResponseProto);
+}
