@@ -1,5 +1,6 @@
 /**
- * Copyright (c) 2010-2016 Yahoo! Inc., 2017 YCSB contributors All rights reserved.
+ * Copyright (c) 2011 YCSB++ project, 2014-2023 YCSB contributors.
+ * Copyright (c) 2023, Hopsworks AB. All rights reserved.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you
  * may not use this file except in compliance with the License. You
@@ -18,6 +19,7 @@
 package site.ycsb.measurements;
 
 import site.ycsb.measurements.exporter.MeasurementsExporter;
+import site.ycsb.workloads.CoreWorkload;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -77,10 +79,14 @@ public class OneMeasurementHistogram extends OneMeasurement {
   private int min;
   private int max;
 
+  private final int readBatchSize;
+
   public OneMeasurementHistogram(String name, Properties props) {
     super(name);
     buckets = Integer.parseInt(props.getProperty(BUCKETS, BUCKETS_DEFAULT));
     verbose = Boolean.valueOf(props.getProperty(VERBOSE_PROPERTY, String.valueOf(false)));
+    readBatchSize = Integer.valueOf(props.getProperty(CoreWorkload.READ_BATCH_SIZE_PROPERTY,
+          CoreWorkload.READ_BATCH_SIZE_PROPERTY_DEFAULT));
     histogram = new long[buckets];
     histogramoverflow = 0;
     operations = 0;
@@ -121,6 +127,10 @@ public class OneMeasurementHistogram extends OneMeasurement {
   public void exportMeasurements(MeasurementsExporter exporter) throws IOException {
     double mean = totallatency / ((double) operations);
     double variance = totalsquaredlatency / ((double) operations) - (mean * mean);
+
+    if (getName().compareTo("BATCH_READ") == 0) {
+      exporter.write(getName(), "BatchSize", readBatchSize);
+    }
     exporter.write(getName(), "Operations", operations);
     exporter.write(getName(), "AverageLatency(us)", mean);
     exporter.write(getName(), "LatencyVariance(us)", variance);

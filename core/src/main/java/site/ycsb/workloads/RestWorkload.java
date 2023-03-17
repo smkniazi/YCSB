@@ -1,5 +1,6 @@
 /**
- * Copyright (c) 2016-2017 YCSB contributors. All rights reserved.
+  * Copyright (c) 2011 YCSB++ project, 2014-2023 YCSB contributors.
+  * Copyright (c) 2023, Hopsworks AB. All rights reserved.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you
  * may not use this file except in compliance with the License. You
@@ -145,6 +146,12 @@ public class RestWorkload extends CoreWorkload {
     deleteKeyChooser = getKeyChooser(requestDistrib, deleteUrlMap.size(), deleteZipfconstant, p);
 
     fieldlengthgenerator = getFieldLengthGenerator(p);
+
+    readBatchSize = Integer.parseInt(p.getProperty(
+        READ_BATCH_SIZE_PROPERTY, READ_BATCH_SIZE_PROPERTY_DEFAULT));
+    if (readBatchSize <= 0) {
+      throw new WorkloadException("Invalid read batch size \"" + readBatchSize + "\"");
+    }
   }
 
   public static DiscreteGenerator createOperationGenerator(final Properties p) {

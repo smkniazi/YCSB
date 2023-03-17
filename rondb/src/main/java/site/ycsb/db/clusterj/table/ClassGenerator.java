@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Yahoo!, Inc. All rights reserved.
+ * Copyright (c) 2023, Hopsworks AB. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you
  * may not use this file except in compliance with the License. You
@@ -18,11 +18,9 @@
 /**
  * YCSB binding for <a href="https://rondb.com/">RonDB</a>.
  */
-package site.ycsb.db.table;
+package site.ycsb.db.clusterj.table;
 
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtMethod;
+import javassist.*;
 
 import java.io.Serializable;
 
@@ -38,14 +36,14 @@ public class ClassGenerator implements Serializable {
     pool = ClassPool.getDefault();
   }
 
-  public Class<?> generateClass(String tableName) throws Exception {
+  public Class<?> generateClass(String tableName) throws NotFoundException, CannotCompileException {
     if (tableObj != null) {
       return tableObj;
     }
 
     synchronized (this) {
       if (tableObj == null) {
-        CtClass originalClass = pool.get("site.ycsb.db.table.DBTable");
+        CtClass originalClass = pool.get("site.ycsb.db.clusterj.table.DBTable");
         originalClass.defrost();
 
         String methodCode = "public String table() { return \"" + tableName + "\"; }";

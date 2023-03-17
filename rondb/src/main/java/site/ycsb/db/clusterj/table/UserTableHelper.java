@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Yahoo!, Inc. All rights reserved.
+ * Copyright (c) 2023, Hopsworks AB. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you
  * may not use this file except in compliance with the License. You
@@ -18,7 +18,7 @@
 /**
  * YCSB binding for <a href="https://rondb.com/">RonDB</a>.
  */
-package site.ycsb.db.table;
+package site.ycsb.db.clusterj.table;
 
 import com.mysql.clusterj.ColumnType;
 import com.mysql.clusterj.DynamicObject;
@@ -42,8 +42,7 @@ public final class UserTableHelper {
 
   }
 
-  public static DynamicObject createDTO(ClassGenerator classGenerator, Session session,
-                                        String tableName, String keyVal,
+  public static DynamicObject createDTO(ClassGenerator classGenerator, Session session, String tableName, String keyVal,
                                         Map<String, ByteIterator> values) throws Exception {
 
     DynamicObject persistable = getTableObject(classGenerator, session, tableName);
@@ -59,8 +58,7 @@ public final class UserTableHelper {
     return persistable;
   }
 
-  private static void setFieldValue(DynamicObject persistable, String colName, byte[] value,
-                                    int lenght) {
+  private static void setFieldValue(DynamicObject persistable, String colName, byte[] value, int lenght) {
     boolean found = false;
     for (int i = 0; i < persistable.columnMetadata().length; i++) {
       String fieldName = persistable.columnMetadata()[i].name();
@@ -89,8 +87,7 @@ public final class UserTableHelper {
     }
   }
 
-  public static HashMap<String, ByteIterator> readFieldsFromDTO(DynamicObject dto,
-                                                                Set<String> fields) {
+  public static HashMap<String, ByteIterator> readFieldsFromDTO(DynamicObject dto, Set<String> fields) {
     HashMap<String, ByteIterator> values = new HashMap<>();
     for (String field : fields) {
       values.put(field, readFieldFromDTO(field, dto));
@@ -119,16 +116,29 @@ public final class UserTableHelper {
     throw new IllegalArgumentException("Column \"" + colName + "\" not found in the table");
   }
 
-  public static DynamicObject getTableObject(ClassGenerator classGenerator, Session session,
-                                      String tableName)
+  public static DynamicObject getTableObject(ClassGenerator classGenerator, Session session, String tableName)
       throws Exception {
     Class<?> tableClass = getTableClass(classGenerator, tableName);
     return (DynamicObject) session.newInstance(tableClass);
   }
 
-  public static Class<?> getTableClass(ClassGenerator classGenerator,
-                                       String tableName)
-      throws Exception {
+  public static Class<?> getTableClass(ClassGenerator classGenerator, String tableName) throws Exception {
     return classGenerator.generateClass(tableName);
+  }
+
+  public static void setPK(String pk, DynamicObject row) {
+    boolean set = false;
+    for (int i = 0; i < row.columnMetadata().length; i++) {
+      String fieldName = row.columnMetadata()[i].name();
+      if (fieldName.equals(KEY)) {
+        row.set(i, pk);
+        set = true;
+        break;
+      }
+    }
+
+    if(!set){
+      throw new UnsupportedOperationException("Failed to set primary key for read operation");
+    }
   }
 }

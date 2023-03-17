@@ -1,6 +1,7 @@
 /*
  * Copyright 2012 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * Copyright 2015-2016 YCSB Contributors. All Rights Reserved.
+ * Copyright (c) 2011 YCSB++ project, 2014-2023 YCSB contributors.
+ * Copyright (c) 2023, Hopsworks AB. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -30,11 +31,8 @@ import org.apache.log4j.Logger;
 import site.ycsb.*;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.Vector;
 
 /**
  * DynamoDB client for YCSB.
@@ -181,6 +179,12 @@ public class DynamoDBClient extends DB {
       }
     }
     return Status.OK;
+  }
+
+  @Override
+  public Status batchRead(String table, List<String> keys, List<Set<String>> fields,
+                          HashMap<String, HashMap<String, ByteIterator>> result) {
+    throw  new UnsupportedOperationException("Batch reads are not yet supported");
   }
 
   @Override

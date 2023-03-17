@@ -1,5 +1,6 @@
 /**
- * Copyright (c) 2013 - 2016 YCSB contributors. All rights reserved.
+ * Copyright (c) 2011 YCSB++ project, 2014-2023 YCSB contributors.
+ * Copyright (c) 2023, Hopsworks AB. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you
  * may not use this file except in compliance with the License. You
@@ -39,13 +40,7 @@ import org.slf4j.LoggerFactory;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.Vector;
+import java.util.*;
 
 /**
  * A class that wraps the CouchbaseClient to allow it to be interfaced with YCSB.
@@ -198,6 +193,12 @@ public class CouchbaseClient extends DB {
       }
       return Status.ERROR;
     }
+  }
+
+  @Override
+  public Status batchRead(String table, List<String> keys, List<Set<String>> fields,
+                          HashMap<String, HashMap<String, ByteIterator>> result) {
+    throw  new UnsupportedOperationException("Batch reads are not yet supported");
   }
 
   @Override

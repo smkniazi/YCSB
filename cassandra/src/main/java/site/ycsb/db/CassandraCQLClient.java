@@ -1,5 +1,6 @@
 /**
- * Copyright (c) 2013-2015 YCSB contributors. All rights reserved.
+ * Copyright (c) 2011 YCSB++ project, 2014-2023 YCSB contributors.
+ * Copyright (c) 2023, Hopsworks AB. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -39,11 +40,7 @@ import site.ycsb.DBException;
 import site.ycsb.Status;
 
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -344,6 +341,12 @@ public class CassandraCQLClient extends DB {
       return Status.ERROR;
     }
 
+  }
+
+  @Override
+  public Status batchRead(String table, List<String> keys, List<Set<String>> fields,
+                          HashMap<String, HashMap<String, ByteIterator>> result) {
+    throw  new UnsupportedOperationException("Batch reads are not yet supported");
   }
 
   /**

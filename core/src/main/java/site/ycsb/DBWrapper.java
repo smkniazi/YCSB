@@ -1,5 +1,6 @@
 /**
- * Copyright (c) 2010 Yahoo! Inc., 2016-2020 YCSB contributors. All rights reserved.
+ * Copyright (c) 2011 YCSB++ project, 2014-2023 YCSB contributors.
+ * Copyright (c) 2023, Hopsworks AB. All rights reserved.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you
  * may not use this file except in compliance with the License. You
@@ -142,6 +143,20 @@ public class DBWrapper extends DB {
       long en = System.nanoTime();
       measure("READ", res, ist, st, en);
       measurements.reportStatus("READ", res);
+      return res;
+    }
+  }
+
+  @Override
+  public Status batchRead(String table, List<String> keys, List<Set<String>> fields,
+                          HashMap<String, HashMap<String, ByteIterator>> result) {
+    try (final TraceScope span = tracer.newScope(scopeStringRead)) {
+      long ist = measurements.getIntendedStartTimeNs();
+      long st = System.nanoTime();
+      Status res = db.batchRead(table, keys, fields, result);
+      long en = System.nanoTime();
+      measure("BATCH_READ", res, ist, st, en);
+      measurements.reportStatus("BATCH_READ", res);
       return res;
     }
   }

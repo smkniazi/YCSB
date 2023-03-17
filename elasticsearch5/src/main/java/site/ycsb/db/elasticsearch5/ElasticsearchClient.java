@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2017 YCSB contributors. All rights reserved.
+ * Copyright (c) 2011 YCSB++ project, 2014-2023 YCSB contributors.
+ * Copyright (c) 2023, Hopsworks AB. All rights reserved.
+ *
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you
  * may not use this file except in compliance with the License. You
@@ -41,12 +43,8 @@ import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Set;
-import java.util.Vector;
 
 import static site.ycsb.db.elasticsearch5.Elasticsearch5.KEY;
 import static site.ycsb.db.elasticsearch5.Elasticsearch5.parseIntegerProperty;
@@ -236,6 +234,12 @@ public class ElasticsearchClient extends DB {
       e.printStackTrace();
       return Status.ERROR;
     }
+  }
+
+  @Override
+  public Status batchRead(String table, List<String> keys, List<Set<String>> fields,
+                          HashMap<String, HashMap<String, ByteIterator>> result) {
+    throw  new UnsupportedOperationException("Batch reads are not yet supported");
   }
 
   @Override

@@ -1,5 +1,6 @@
 /**
- * Copyright (c) 2010 Yahoo! Inc., Copyright (c) 2016-2020 YCSB contributors. All rights reserved.
+ * Copyright (c) 2011 YCSB++ project, 2014-2023 YCSB contributors.
+ * Copyright (c) 2023, Hopsworks AB. All rights reserved.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you
  * may not use this file except in compliance with the License. You
@@ -211,6 +212,16 @@ public class CoreWorkload extends Workload {
   public static final String READ_PROPORTION_PROPERTY_DEFAULT = "0.95";
 
   /**
+   * The name of the property for the size of read batches.
+   */
+  public static final String READ_BATCH_SIZE_PROPERTY = "readBatchSize";
+
+  /**
+   * The default read batch.
+   */
+  public static final String READ_BATCH_SIZE_PROPERTY_DEFAULT = "1";
+
+  /**
    * The name of the property for the proportion of transactions that are updates.
    */
   public static final String UPDATE_PROPORTION_PROPERTY = "updateproportion";
@@ -368,6 +379,7 @@ public class CoreWorkload extends Workload {
   protected int zeropadding;
   protected int insertionRetryLimit;
   protected int insertionRetryInterval;
+  protected int readBatchSize;
 
   private Measurements measurements = Measurements.getMeasurements();
 
@@ -545,6 +557,11 @@ public class CoreWorkload extends Workload {
         INSERTION_RETRY_LIMIT, INSERTION_RETRY_LIMIT_DEFAULT));
     insertionRetryInterval = Integer.parseInt(p.getProperty(
         INSERTION_RETRY_INTERVAL, INSERTION_RETRY_INTERVAL_DEFAULT));
+    readBatchSize = Integer.parseInt(p.getProperty(
+        READ_BATCH_SIZE_PROPERTY, READ_BATCH_SIZE_PROPERTY_DEFAULT));
+    if (readBatchSize <= 0) {
+      throw new WorkloadException("Invalid read batch size \"" + readBatchSize + "\"");
+    }
   }
 
   /**
@@ -661,7 +678,11 @@ public class CoreWorkload extends Workload {
 
     switch (operation) {
     case "READ":
-      doTransactionRead(db);
+      if (readBatchSize == 1){
+        doTransactionRead(db);
+      } else {
+        doTransactionBatchRead(db);
+      }
       break;
     case "UPDATE":
       doTransactionUpdate(db);
@@ -743,6 +764,44 @@ public class CoreWorkload extends Workload {
 
     if (dataintegrity) {
       verifyRow(keyname, cells);
+    }
+  }
+
+  public void doTransactionBatchRead(DB db) {
+    LinkedList<String> keys = new LinkedList<>();
+    LinkedList<Set<String>> fieldsPerOp = new LinkedList<>();
+    HashMap<String /*key*/, HashMap<String/*field*/, ByteIterator>> results = new HashMap<>();
+
+    for (int i = 0; i < readBatchSize; i++) {
+      // choose a random key
+      long keynum = nextKeynum();
+      String pk = CoreWorkload.buildKeyName(keynum, zeropadding, orderedinserts);
+      keys.add(pk);
+
+      HashSet<String> fields = null;
+      if (!readallfields) {
+        // read a random field
+        String fieldname = fieldnames.get(fieldchooser.nextValue().intValue());
+        fields = new HashSet<String>();
+        fields.add(fieldname);
+      } else {
+        // pass the full field list if dataintegrity is on for verification
+        fields = new HashSet<String>(fieldnames);
+      }
+      fieldsPerOp.add(fields);
+
+      HashMap<String, ByteIterator> result = new HashMap<>();
+      results.put(pk, result);
+    }
+
+    db.batchRead(table, keys, fieldsPerOp, results);
+
+    if (dataintegrity) {
+      for (int i = 0; i < readBatchSize; i++) {
+        String pk = keys.get(i);
+        HashMap<String, ByteIterator> result = results.get(pk);
+        verifyRow(pk, result);
+      }
     }
   }
 
