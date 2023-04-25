@@ -243,6 +243,6 @@ public final class RestApiClient extends DB {
   }
 
   @Override
-  public void cleanup() throws DBException {
+  public synchronized void cleanup() throws DBException {
   }
 }

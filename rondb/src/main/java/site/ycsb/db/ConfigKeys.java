@@ -23,8 +23,8 @@ public final class ConfigKeys {
 
   private  ConfigKeys(){}
 
-  public static final String RONDB_API_TYPE_KEY = "rondb.api.type";
-  public static final String RONDB_API_TYPE_DEFAULT = RonDBAPIType.CLUSTERJ.toString();
+  public static final String RONDB_READ_API_TYPE_KEY = "rondb.read.api.type";
+  public static final String RONDB_READ_API_TYPE_DEFAULT = RonDBAPIType.CLUSTERJ.toString();
 
   public static final String SCHEMA_KEY = "rondb.schema";
   public static final String SCHEMA_DEFAULT = "ycsb";

@@ -195,7 +195,10 @@ public final class GrpcClient extends DB {
   }
 
   @Override
-  public void cleanup() throws DBException {
-    channel.shutdown();
+  public synchronized  void cleanup() throws DBException {
+    if (channel != null) {
+      channel.shutdown();
+      channel = null;
+    }
   }
 }
