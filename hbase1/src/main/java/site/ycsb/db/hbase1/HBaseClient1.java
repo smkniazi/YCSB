@@ -300,6 +300,12 @@ public class HBaseClient1 extends site.ycsb.DB {
     throw  new UnsupportedOperationException("Batch reads are not yet supported");
   }
 
+  @Override
+  public Status batchUpdate(String table, List<String> keys,
+                            List<Map<String, ByteIterator>>  values) {
+    throw  new UnsupportedOperationException("Batch updates are not yet supported");
+  }
+
   /**
    * Perform a range scan for a set of records in the database. Each field/value
    * pair from the result will be stored in a HashMap.

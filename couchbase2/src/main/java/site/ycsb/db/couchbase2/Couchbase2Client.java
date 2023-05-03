@@ -262,6 +262,12 @@ public class Couchbase2Client extends DB {
     throw  new UnsupportedOperationException("Batch reads are not yet supported");
   }
 
+  @Override
+  public Status batchUpdate(String table, List<String> keys,
+                            List<Map<String, ByteIterator>>  values) {
+    throw  new UnsupportedOperationException("Batch updates are not yet supported");
+  }
+
   /**
    * Performs the {@link #read(String, String, Set, Map)} operation via Key/Value ("get").
    *

@@ -71,6 +71,7 @@ public class OneMeasurementHdrHistogram extends OneMeasurement {
   private final List<Double> percentiles;
 
   private final int readBatchSize;
+  private final int updateBatchSize;
 
   public OneMeasurementHdrHistogram(String name, Properties props) {
     super(name);
@@ -78,6 +79,8 @@ public class OneMeasurementHdrHistogram extends OneMeasurement {
     verbose = Boolean.valueOf(props.getProperty(VERBOSE_PROPERTY, String.valueOf(false)));
     readBatchSize =Integer.valueOf(props.getProperty(CoreWorkload.READ_BATCH_SIZE_PROPERTY,
           CoreWorkload.READ_BATCH_SIZE_PROPERTY_DEFAULT));
+    updateBatchSize =Integer.valueOf(props.getProperty(CoreWorkload.UPDATE_BATCH_SIZE_PROPERTY,
+        CoreWorkload.UPDATE_BATCH_SIZE_PROPERTY_DEFAULT));
     boolean shouldLog = Boolean.parseBoolean(props.getProperty("hdrhistogram.fileoutput", "false"));
     if (!shouldLog) {
       log = null;
@@ -124,6 +127,11 @@ public class OneMeasurementHdrHistogram extends OneMeasurement {
     String prepend = "";
     if (getName().compareTo("BATCH_READ") == 0) {
       exporter.write(getName(), "BatchSize", readBatchSize);
+      prepend = "Batch";
+    }
+
+    if (getName().compareTo("BATCH_UPDATE") == 0) {
+      exporter.write(getName(), "BatchSize", updateBatchSize);
       prepend = "Batch";
     }
 

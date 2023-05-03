@@ -123,7 +123,8 @@ This section describes how to run YCSB on RonDB.
         -p "fieldcount=10"  \
         -p "fieldlength=100" \
         -p "fieldnameprefix=FIELD" \
-        -p "readBatchSize=5" 
+        -p "readBatchSize=5" \
+        -p "updateBatchSize=5" 
     ```
   - *REST API*
 
@@ -138,7 +139,8 @@ This section describes how to run YCSB on RonDB.
         -p "fieldcount=10"  \
         -p "fieldlength=100" \
         -p "fieldnameprefix=FIELD" \
-        -p "readBatchSize=5" 
+        -p "readBatchSize=5" \
+        -p "updateBatchSize=5" 
     ```
     
   - *gRPC*
@@ -154,5 +156,6 @@ This section describes how to run YCSB on RonDB.
         -p "fieldcount=10"  \
         -p "fieldlength=100" \
         -p "fieldnameprefix=FIELD" \
-        -p "readBatchSize=5" 
+        -p "readBatchSize=5" \
+        -p "updateBatchSize=5" 
     ```

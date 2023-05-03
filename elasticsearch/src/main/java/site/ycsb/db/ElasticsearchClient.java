@@ -284,6 +284,12 @@ public class ElasticsearchClient extends DB {
     throw  new UnsupportedOperationException("Batch reads are not yet supported");
   }
 
+  @Override
+  public Status batchUpdate(String table, List<String> keys,
+                            List<Map<String, ByteIterator>>  values) {
+    throw  new UnsupportedOperationException("Batch updates are not yet supported");
+  }
+
   /**
    * Update a record in the database. Any field/value pairs in the specified
    * values HashMap will be written into the record with the specified record

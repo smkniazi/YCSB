@@ -5,7 +5,7 @@ cd $DIR/../..
 
 export JAVA_OPTS="-Djava.library.path=/Users/salman/code/hops/rondb21/build/lib"
 
-./bin/ycsb run rondb -s -P ./workloads/workloadc \
+./bin/ycsb run rondb -s -P ./workloads/workloada \
    -p "rondb.connection.string=localhost:13000" \
    -p "rondb.schema=ycsb" \
    -p "rondb.read.api.type=REST" \
@@ -15,6 +15,7 @@ export JAVA_OPTS="-Djava.library.path=/Users/salman/code/hops/rondb21/build/lib"
    -p "fieldlength=100" \
    -p "fieldnameprefix=FIELD" \
    -p "threadcount=10" \
-   -p "readBatchSize=5"
+   -p "readBatchSize=5" \
+   -p "updateBatchSize=5"
 
 

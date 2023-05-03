@@ -152,6 +152,11 @@ public class RestWorkload extends CoreWorkload {
     if (readBatchSize <= 0) {
       throw new WorkloadException("Invalid read batch size \"" + readBatchSize + "\"");
     }
+    updateBatchSize = Integer.parseInt(p.getProperty(
+        UPDATE_BATCH_SIZE_PROPERTY, UPDATE_BATCH_SIZE_PROPERTY_DEFAULT));
+    if (updateBatchSize <= 0) {
+      throw new WorkloadException("Invalid update batch size \"" + updateBatchSize + "\"");
+    }
   }
 
   public static DiscreteGenerator createOperationGenerator(final Properties p) {

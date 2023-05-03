@@ -297,6 +297,12 @@ public class ElasticsearchRestClient extends DB {
   }
 
   @Override
+  public Status batchUpdate(String table, List<String> keys,
+                            List<Map<String, ByteIterator>>  values) {
+    throw  new UnsupportedOperationException("Batch updates are not yet supported");
+  }
+
+  @Override
   public Status update(final String table, final String key, final Map<String, ByteIterator> values) {
     try {
       final Response searchResponse = search(table, key);

@@ -152,6 +152,12 @@ public final class GrpcClient extends DB {
     }
   }
 
+  @Override
+  public Status batchUpdate(String table, List<String> keys,
+                            List<Map<String, ByteIterator>>  values) {
+    throw  new UnsupportedOperationException("Batch updates are not yet supported");
+  }
+
   private PKReadRequestProto createPKRequestProto(String table, String pk,
                                                   Set<String> fields) {
     PKReadRequestProto.Builder pkReadBuilder = PKReadRequestProto.newBuilder();

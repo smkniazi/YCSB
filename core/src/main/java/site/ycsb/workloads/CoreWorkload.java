@@ -222,6 +222,16 @@ public class CoreWorkload extends Workload {
   public static final String READ_BATCH_SIZE_PROPERTY_DEFAULT = "1";
 
   /**
+   * The name of the property for the size of update batches.
+   */
+  public static final String UPDATE_BATCH_SIZE_PROPERTY = "updateBatchSize";
+
+  /**
+   * The default update batch.
+   */
+  public static final String UPDATE_BATCH_SIZE_PROPERTY_DEFAULT = "1";
+
+  /**
    * The name of the property for the proportion of transactions that are updates.
    */
   public static final String UPDATE_PROPORTION_PROPERTY = "updateproportion";
@@ -380,6 +390,7 @@ public class CoreWorkload extends Workload {
   protected int insertionRetryLimit;
   protected int insertionRetryInterval;
   protected int readBatchSize;
+  protected int updateBatchSize;
 
   private Measurements measurements = Measurements.getMeasurements();
 
@@ -562,6 +573,11 @@ public class CoreWorkload extends Workload {
     if (readBatchSize <= 0) {
       throw new WorkloadException("Invalid read batch size \"" + readBatchSize + "\"");
     }
+    updateBatchSize = Integer.parseInt(p.getProperty(
+        UPDATE_BATCH_SIZE_PROPERTY, UPDATE_BATCH_SIZE_PROPERTY_DEFAULT));
+    if (updateBatchSize <= 0) {
+      throw new WorkloadException("Invalid update batch size \"" + updateBatchSize + "\"");
+    }
   }
 
   /**
@@ -685,7 +701,11 @@ public class CoreWorkload extends Workload {
       }
       break;
     case "UPDATE":
-      doTransactionUpdate(db);
+      if (updateBatchSize == 1){
+        doTransactionUpdate(db);
+      } else {
+        doTransactionBatchUpdate(db);
+      }
       break;
     case "INSERT":
       doTransactionInsert(db);
@@ -891,6 +911,33 @@ public class CoreWorkload extends Workload {
     }
 
     db.update(table, keyname, values);
+  }
+
+  public void doTransactionBatchUpdate(DB db) {
+    LinkedList<String> keys = new LinkedList<>();
+    LinkedList<Map<String, ByteIterator>> allValues = new LinkedList<>();
+
+    for (int i = 0; i < updateBatchSize; i++) {
+      // choose a random key
+      long keynum = nextKeynum();
+
+      String keyname = CoreWorkload.buildKeyName(keynum, zeropadding, orderedinserts);
+
+      HashMap<String, ByteIterator> values;
+
+      if (writeallfields) {
+        // new data for all the fields
+        values = buildValues(keyname);
+      } else {
+        // update a random field
+        values = buildSingleValue(keyname);
+      }
+
+      keys.add(keyname);
+      allValues.add(values);
+    }
+
+    db.batchUpdate(table, keys, allValues);
   }
 
   public void doTransactionInsert(DB db) {

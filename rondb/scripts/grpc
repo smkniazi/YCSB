@@ -15,5 +15,6 @@ export JAVA_OPTS="-Djava.library.path=/Users/salman/code/hops/rondb21/build/lib"
     -p "fieldlength=100" \
     -p "fieldnameprefix=FIELD" \
     -p "threadcount=10" \
-    -p "readBatchSize=5"
+    -p "readBatchSize=5" \
+    -p "updateBatchSize=5"
 

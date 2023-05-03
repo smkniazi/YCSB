@@ -229,6 +229,12 @@ public class FoundationDBClient extends DB {
   }
 
   @Override
+  public Status batchUpdate(String table, List<String> keys,
+                            List<Map<String, ByteIterator>>  values) {
+    throw  new UnsupportedOperationException("Batch updates are not yet supported");
+  }
+
+  @Override
   public Status update(String table, String key, Map<String, ByteIterator> values) {
     String rowKey = getRowKey(dbName, table, key);
     logger.debug("update key = {}", rowKey);

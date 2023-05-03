@@ -80,6 +80,7 @@ public class OneMeasurementHistogram extends OneMeasurement {
   private int max;
 
   private final int readBatchSize;
+  private final int updateBatchSize;
 
   public OneMeasurementHistogram(String name, Properties props) {
     super(name);
@@ -87,6 +88,8 @@ public class OneMeasurementHistogram extends OneMeasurement {
     verbose = Boolean.valueOf(props.getProperty(VERBOSE_PROPERTY, String.valueOf(false)));
     readBatchSize = Integer.valueOf(props.getProperty(CoreWorkload.READ_BATCH_SIZE_PROPERTY,
           CoreWorkload.READ_BATCH_SIZE_PROPERTY_DEFAULT));
+    updateBatchSize = Integer.valueOf(props.getProperty(CoreWorkload.UPDATE_BATCH_SIZE_PROPERTY,
+        CoreWorkload.UPDATE_BATCH_SIZE_PROPERTY_DEFAULT));
     histogram = new long[buckets];
     histogramoverflow = 0;
     operations = 0;
@@ -130,6 +133,9 @@ public class OneMeasurementHistogram extends OneMeasurement {
 
     if (getName().compareTo("BATCH_READ") == 0) {
       exporter.write(getName(), "BatchSize", readBatchSize);
+    }
+    if (getName().compareTo("BATCH_UPDATE") == 0) {
+      exporter.write(getName(), "BatchSize", updateBatchSize);
     }
     exporter.write(getName(), "Operations", operations);
     exporter.write(getName(), "AverageLatency(us)", mean);
