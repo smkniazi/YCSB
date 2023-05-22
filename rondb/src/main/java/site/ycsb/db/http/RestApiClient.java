@@ -52,6 +52,7 @@ public final class RestApiClient extends DB {
   private String restAPIVersion;
   private String restServerURI;
   private MyHttpClient myHttpClient;
+  private boolean useTLS;
   private final int threadID;
 
   private Properties properties;
@@ -71,16 +72,25 @@ public final class RestApiClient extends DB {
         Integer.toString(ConfigKeys.RONDB_REST_SERVER_PORT_DEFAULT)));
     restAPIVersion = properties.getProperty(ConfigKeys.RONDB_REST_API_VERSION_KEY,
         ConfigKeys.RONDB_REST_API_VERSION_DEFAULT);
-    restServerURI = "http://" + restServerIP + ":" + restServerPort + "/" + restAPIVersion;
+    restAPIVersion = properties.getProperty(ConfigKeys.RONDB_REST_API_VERSION_KEY,
+        ConfigKeys.RONDB_REST_API_VERSION_DEFAULT);
+    useTLS = Boolean.parseBoolean(properties.getProperty(ConfigKeys.RONDB_REST_API_USE_TLS_KEY,
+        Boolean.toString(ConfigKeys.RONDB_REST_API_USE_TLS_DEFAULT)));
+    if (useTLS) {
+      restServerURI = "https://";
+    } else {
+      restServerURI = "http://";
+    }
+    restServerURI = restServerURI + restServerIP + ":" + restServerPort + "/" + restAPIVersion;
     boolean async =
         Boolean.parseBoolean(properties.getProperty(ConfigKeys.RONDB_REST_API_USE_ASYNC_REQUESTS_KEY,
             Boolean.toString(ConfigKeys.RONDB_REST_API_USE_ASYNC_REQUESTS_DEFAULT)));
 
     try {
       if (async) {
-        myHttpClient = new MyHttpClientAsync(numThreads);
+        myHttpClient = new MyHttpClientAsync(numThreads, useTLS);
       } else {
-        myHttpClient = new MyHttpClientSync();
+        myHttpClient = new MyHttpClientSync(useTLS);
       }
     } catch (IOReactorException e) {
       logger.error(e.getMessage(), e);
@@ -173,6 +183,12 @@ public final class RestApiClient extends DB {
   }
 
   @Override
+  public Status batchUpdate(String table, List<String> keys,
+                            List<Map<String, ByteIterator>> values) {
+    throw new UnsupportedOperationException("Batch updates are not yet supported");
+  }
+
+  @Override
   public Status scan(String table, String startkey, int recordcount, Set<String> fields,
                      Vector<HashMap<String, ByteIterator>> result) {
     String msg = "Scan is not supported by REST API";
@@ -243,6 +259,6 @@ public final class RestApiClient extends DB {
   }
 
   @Override
-  public void cleanup() throws DBException {
+  public synchronized void cleanup() throws DBException {
   }
 }

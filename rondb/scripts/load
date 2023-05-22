@@ -1,0 +1,19 @@
+#!/bin/bash
+
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+cd $DIR/../..
+
+export JAVA_OPTS="-Djava.library.path=/Users/salman/code/hops/rondb21/build/lib"
+mysql=~/code/hops/rondb21/build/bin/mysql
+
+$mysql -uroot  -P 13001 --protocol=TCP -h localhost -e "drop database ycsb" 
+$mysql -uroot  -P 13001 --protocol=TCP -h localhost -e "create database ycsb" 
+$mysql -uroot  -P 13001 --protocol=TCP -h localhost ycsb -e "CREATE TABLE usertable (YCSB_KEY VARCHAR(255) PRIMARY KEY, FIELD0 varchar(100), FIELD1 varchar(100), FIELD2 varchar(100), FIELD3 varchar(100), FIELD4 varchar(100), FIELD5 varchar(100), FIELD6 varchar(100), FIELD7 varchar(100), FIELD8 varchar(100), FIELD9 varchar(100)) charset latin1 engine=ndbcluster"
+
+./bin/ycsb load rondb  -s -P ./workloads/workloada \
+        -p "rondb.connection.string=localhost:13000" \
+        -p "rondb.schema=ycsb" \
+        -p "fieldcount=10"  \
+        -p "fieldlength=100"  \
+        -p "fieldnameprefix=FIELD" 
+

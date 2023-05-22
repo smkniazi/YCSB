@@ -68,6 +68,7 @@ public class OneMeasurementTimeSeries extends OneMeasurement {
   private int min = -1;
   private int max = -1;
   private final int readBatchSize;
+  private final int updateBatchSize;
 
   public OneMeasurementTimeSeries(String name, Properties props) {
     super(name);
@@ -75,6 +76,8 @@ public class OneMeasurementTimeSeries extends OneMeasurement {
     measurements = new Vector<>();
     readBatchSize = Integer.valueOf(props.getProperty(CoreWorkload.READ_BATCH_SIZE_PROPERTY,
           CoreWorkload.READ_BATCH_SIZE_PROPERTY_DEFAULT));
+    updateBatchSize = Integer.valueOf(props.getProperty(CoreWorkload.UPDATE_BATCH_SIZE_PROPERTY,
+        CoreWorkload.UPDATE_BATCH_SIZE_PROPERTY_DEFAULT));
   }
 
   private synchronized void checkEndOfUnit(boolean forceend) {
@@ -126,6 +129,11 @@ public class OneMeasurementTimeSeries extends OneMeasurement {
     String prepend = "";
     if (getName().compareTo("BATCH_READ") == 0) {
       exporter.write(getName(), "BatchSize", readBatchSize);
+      prepend = "Batch";
+    }
+
+    if (getName().compareTo("BATCH_UPDATE") == 0) {
+      exporter.write(getName(), "BatchSize", updateBatchSize);
       prepend = "Batch";
     }
     exporter.write(getName(), prepend+"Operations", operations);

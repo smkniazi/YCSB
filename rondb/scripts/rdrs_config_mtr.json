@@ -1,0 +1,45 @@
+{
+        "Internal": {
+                "APIVersion": "0.1.0"
+        },
+        "REST": {
+                "ServerIP": "0.0.0.0",
+                "ServerPort": 4406
+        },
+        "GRPC": {
+                "ServerIP": "0.0.0.0",
+                "ServerPort": 5406
+        },
+        "RonDB": {
+                "Mgmds": [
+                        {
+                                "IP": "0.0.0.0",
+                                "Port": 13000 
+                        }
+                ]
+        },
+        "Security": {
+                "TLS": {
+                        "EnableTLS": false,
+                        "RequireAndVerifyClientCert": false
+                }, 
+                "APIKey": {
+                        "UseHopsworksAPIKeys": false
+                }
+        },
+        "Log": {
+                "Level": "info"
+        },
+        "Testing": {
+                "MySQL": {
+                        "Servers": [
+                                {
+                                        "IP": "0.0.0.0",
+                                        "Port": 13001 
+                                }
+                        ],
+                        "User": "root",
+                        "Password": ""
+                }
+        }
+}

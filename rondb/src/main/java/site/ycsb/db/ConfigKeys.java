@@ -23,8 +23,8 @@ public final class ConfigKeys {
 
   private  ConfigKeys(){}
 
-  public static final String RONDB_API_TYPE_KEY = "rondb.api.type";
-  public static final String RONDB_API_TYPE_DEFAULT = RonDBAPIType.CLUSTERJ.toString();
+  public static final String RONDB_READ_API_TYPE_KEY = "rondb.read.api.type";
+  public static final String RONDB_READ_API_TYPE_DEFAULT = RonDBAPIType.CLUSTERJ.toString();
 
   public static final String SCHEMA_KEY = "rondb.schema";
   public static final String SCHEMA_DEFAULT = "ycsb";
@@ -46,4 +46,10 @@ public final class ConfigKeys {
 
   public static final String RONDB_REST_API_USE_ASYNC_REQUESTS_KEY = "rondb.rest.api.use.async.requests";
   public static final boolean RONDB_REST_API_USE_ASYNC_REQUESTS_DEFAULT = false;
+
+  public static final String RONDB_REST_API_USE_TLS_KEY = "rondb.rest.api.use.tls";
+  public static final boolean RONDB_REST_API_USE_TLS_DEFAULT = false;
+
+  public static final String RONDB_GRPC_API_USE_TLS_KEY = "rondb.grpc.api.use.tls";
+  public static final boolean RONDB_GRPC_API_USE_TLS_DEFAULT = false;
 }

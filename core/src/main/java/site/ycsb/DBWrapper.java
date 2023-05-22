@@ -161,6 +161,20 @@ public class DBWrapper extends DB {
     }
   }
 
+  @Override
+  public Status batchUpdate(String table, List<String> keys,
+                            List<Map<String, ByteIterator>>  values) {
+    try (final TraceScope span = tracer.newScope(scopeStringRead)) {
+      long ist = measurements.getIntendedStartTimeNs();
+      long st = System.nanoTime();
+      Status res = db.batchUpdate(table, keys, values);
+      long en = System.nanoTime();
+      measure("BATCH_UPDATE", res, ist, st, en);
+      measurements.reportStatus("BATCH_UPDATE", res);
+      return res;
+    }
+  }
+
   /**
    * Perform a range scan for a set of records in the database.
    * Each field/value pair from the result will be stored in a HashMap.

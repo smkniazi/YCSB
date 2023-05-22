@@ -1,0 +1,8 @@
+#!/bin/bash
+
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
+RDRS_BIN=~/code/hops/rondb21/build/storage/ndb/rest-server/rest-api-server/bin/server/rdrs
+
+$RDRS_BIN -config $DIR/rdrs_config_mtr.json
+

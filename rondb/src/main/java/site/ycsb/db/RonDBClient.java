@@ -37,7 +37,8 @@ import java.util.concurrent.CountDownLatch;
  */
 public class RonDBClient extends DB {
   protected static Logger logger = LoggerFactory.getLogger(RonDBClient.class);
-  private DB dbClient;
+  private DB dbReadClient;
+  private DB clusterJClient;
   private static Object lock = new Object();
   private long fieldCount;
   private Set<String> fieldNames;
@@ -62,28 +63,17 @@ public class RonDBClient extends DB {
 
       threadID = maxThreadID++;
 
-      String apiPropStr = properties.getProperty(ConfigKeys.RONDB_API_TYPE_KEY,
-          ConfigKeys.RONDB_API_TYPE_DEFAULT);
+      String readApiPropStr = properties.getProperty(ConfigKeys.RONDB_READ_API_TYPE_KEY,
+          ConfigKeys.RONDB_READ_API_TYPE_DEFAULT);
 
-      try {
-        if (apiPropStr.compareToIgnoreCase(RonDBAPIType.CLUSTERJ.toString()) == 0) {
-          dbClient = new ClusterJClient(properties);
-        } else if (apiPropStr.compareToIgnoreCase(RonDBAPIType.REST.toString()) == 0) {
-          dbClient = new RestApiClient(threadID, properties);
-        } else if (apiPropStr.compareToIgnoreCase(RonDBAPIType.GRPC.toString()) == 0) {
-          dbClient = new GrpcClient(threadID, properties);
-        } else {
-          throw new IllegalArgumentException("Wrong argument " + ConfigKeys.RONDB_API_TYPE_KEY);
-        }
-        dbClient.init();
-      } catch (Exception e) {
-        logger.error("Initialization failed ", e);
-        e.printStackTrace();
-        if (e instanceof DBException) {
-          throw (DBException) e;
-        } else {
-          throw new DBException(e);
-        }
+      // writer
+      clusterJClient = initClusterJClient(properties);
+
+      // reader
+      if (readApiPropStr.compareToIgnoreCase(RonDBAPIType.CLUSTERJ.toString()) == 0) {
+        dbReadClient = clusterJClient; // same client
+      } else {
+        dbReadClient = initClient(readApiPropStr, properties);
       }
 
       fieldCount = Long.parseLong(properties.getProperty(CoreWorkload.FIELD_COUNT_PROPERTY,
@@ -97,6 +87,49 @@ public class RonDBClient extends DB {
     }
   }
 
+  private DB initClusterJClient(Properties properties) throws DBException {
+    DB dbClient;
+    try {
+      dbClient = new ClusterJClient(properties);
+      dbClient.init();
+    } catch (Exception e) {
+      logger.error("Initialization failed ", e);
+      e.printStackTrace();
+      if (e instanceof DBException) {
+        throw (DBException) e;
+      } else {
+        throw new DBException(e);
+      }
+    }
+    return dbClient;
+
+  }
+
+  private DB initClient(String clientType, Properties properties) throws DBException {
+    DB dbClient = null;
+    try {
+      if (clientType.compareToIgnoreCase(RonDBAPIType.CLUSTERJ.toString()) == 0) {
+        dbClient = new ClusterJClient(properties);
+      } else if (clientType.compareToIgnoreCase(RonDBAPIType.REST.toString()) == 0) {
+        dbClient = new RestApiClient(threadID, properties);
+      } else if (clientType.compareToIgnoreCase(RonDBAPIType.GRPC.toString()) == 0) {
+        dbClient = new GrpcClient(threadID, properties);
+      } else {
+        throw new IllegalArgumentException("Wrong argument " + ConfigKeys.RONDB_READ_API_TYPE_KEY);
+      }
+      dbClient.init();
+    } catch (Exception e) {
+      logger.error("Initialization failed ", e);
+      e.printStackTrace();
+      if (e instanceof DBException) {
+        throw (DBException) e;
+      } else {
+        throw new DBException(e);
+      }
+    }
+    return dbClient;
+  }
+
   /**
    * Cleanup any state for this DB.
    * Called once per DB instance; there is one DB instance per client thread.
@@ -106,7 +139,8 @@ public class RonDBClient extends DB {
     try {
       //stop all threads at the same time
       threadCompletionCount.await();
-      dbClient.cleanup();
+      dbReadClient.cleanup();
+      clusterJClient.cleanup();
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
@@ -126,7 +160,7 @@ public class RonDBClient extends DB {
   public Status read(String table, String key, Set<String> fields, Map<String, ByteIterator> result) {
     Set<String> fieldsToRead = fields != null ? fields : fieldNames;
     try {
-      return dbClient.read(table, key, fieldsToRead, result);
+      return dbReadClient.read(table, key, fieldsToRead, result);
     } catch (Exception e) {
       logger.error("Error " + e);
       return Status.ERROR;
@@ -137,7 +171,19 @@ public class RonDBClient extends DB {
   public Status batchRead(String table, List<String> keys, List<Set<String>> fields,
                           HashMap<String, HashMap<String, ByteIterator>> results) {
     try {
-      return dbClient.batchRead(table, keys, fields, results);
+      return dbReadClient.batchRead(table, keys, fields, results);
+    } catch (Exception e) {
+      e.printStackTrace();
+      logger.error("Error " + e);
+      return Status.ERROR;
+    }
+  }
+
+  @Override
+  public Status batchUpdate(String table, List<String> keys,
+                            List<Map<String, ByteIterator>>  values) {
+    try {
+      return clusterJClient.batchUpdate(table, keys, values);
     } catch (Exception e) {
       e.printStackTrace();
       logger.error("Error " + e);
@@ -162,7 +208,8 @@ public class RonDBClient extends DB {
                      Vector<HashMap<String, ByteIterator>> result) {
     Set<String> fieldsToRead = fields != null ? fields : fieldNames;
     try {
-      return dbClient.scan(table, startkey, recordcount, fieldsToRead, result);
+      //scan operation using the writer as Rest API does not yet support scan operations
+      return clusterJClient.scan(table, startkey, recordcount, fieldsToRead, result);
     } catch (Exception e) {
       logger.error("Error " + e);
       return Status.ERROR;
@@ -183,7 +230,7 @@ public class RonDBClient extends DB {
   @Override
   public Status update(String table, String key, Map<String, ByteIterator> values) {
     try {
-      return dbClient.update(table, key, values);
+      return clusterJClient.update(table, key, values);
     } catch (Exception e) {
       logger.error("Error " + e);
       return Status.ERROR;
@@ -203,7 +250,7 @@ public class RonDBClient extends DB {
   @Override
   public Status insert(String table, String key, Map<String, ByteIterator> values) {
     try {
-      return dbClient.insert(table, key, values);
+      return clusterJClient.insert(table, key, values);
     } catch (Exception e) {
       logger.error("Error " + e);
       return Status.ERROR;
@@ -220,7 +267,7 @@ public class RonDBClient extends DB {
   @Override
   public Status delete(String table, String key) {
     try {
-      return dbClient.delete(table, key);
+      return clusterJClient.delete(table, key);
     } catch (Exception e) {
       logger.error("Error " + e);
       return Status.ERROR;

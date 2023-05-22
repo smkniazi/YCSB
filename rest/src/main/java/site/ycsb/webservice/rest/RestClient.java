@@ -121,6 +121,12 @@ public class RestClient extends DB {
   }
 
   @Override
+  public Status batchUpdate(String table, List<String> keys,
+                            List<Map<String, ByteIterator>>  values) {
+    throw  new UnsupportedOperationException("Batch updates are not yet supported");
+  }
+
+  @Override
   public Status insert(String table, String endpoint, Map<String, ByteIterator> values) {
     int responseCode;
     try {

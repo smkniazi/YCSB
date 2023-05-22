@@ -20,6 +20,7 @@
  */
 package site.ycsb.db.clusterj.table;
 
+import com.mysql.clusterj.ColumnMetadata;
 import com.mysql.clusterj.ColumnType;
 import com.mysql.clusterj.DynamicObject;
 import com.mysql.clusterj.Session;
@@ -46,40 +47,43 @@ public final class UserTableHelper {
                                         Map<String, ByteIterator> values) throws Exception {
 
     DynamicObject persistable = getTableObject(classGenerator, session, tableName);
-    setFieldValue(persistable, KEY, keyVal.getBytes(), keyVal.getBytes().length);
+    ColumnMetadata[] columnMetadata = persistable.columnMetadata();
+    setFieldValue(persistable, columnMetadata, KEY, keyVal.getBytes(), keyVal.getBytes().length);
 
     if (values != null) {
       for (String colName : values.keySet()) {
         byte[] value = values.get(colName).toArray();
-        setFieldValue(persistable, colName, value, value.length);
+        setFieldValue(persistable, columnMetadata, colName, value, value.length);
       }
     }
 
     return persistable;
   }
 
-  private static void setFieldValue(DynamicObject persistable, String colName, byte[] value, int lenght) {
+  private static void setFieldValue(DynamicObject persistable, ColumnMetadata[] columnMetadata,
+                                    String colName, byte[] value, int lenght) {
     boolean found = false;
-    for (int i = 0; i < persistable.columnMetadata().length; i++) {
-      String fieldName = persistable.columnMetadata()[i].name();
+    for (int i = 0; i < columnMetadata.length; i++) {
+      String fieldName = columnMetadata[i].name();
       if (fieldName.equals(colName)) {
-        int maxLength = persistable.columnMetadata()[i].maximumLength();
+        int maxLength = columnMetadata[i].maximumLength();
         if (maxLength < lenght) {
           throw new IllegalArgumentException("Column \"" + colName + "\" can only store " +
               maxLength + ". Request length: " + lenght);
         }
 
-        ColumnType cType = persistable.columnMetadata()[i].columnType();
+        ColumnType cType = columnMetadata[i].columnType();
         if (cType == ColumnType.Varchar || cType == ColumnType.Longvarchar) {
           persistable.set(i, new String(value, StandardCharsets.UTF_8));
         } else if (cType == ColumnType.Varbinary || cType == ColumnType.Longvarbinary) {
           persistable.set(i, value);
         } else {
-          throw new UnsupportedOperationException(persistable.columnMetadata()[i].columnType() +
+          throw new UnsupportedOperationException(columnMetadata[i].columnType() +
               " is not supported in this benchmark");
         }
 
         found = true;
+        break;
       }
     }
     if (!found) {
@@ -88,17 +92,19 @@ public final class UserTableHelper {
   }
 
   public static HashMap<String, ByteIterator> readFieldsFromDTO(DynamicObject dto, Set<String> fields) {
+    ColumnMetadata[] columnMetadata = dto.columnMetadata();
     HashMap<String, ByteIterator> values = new HashMap<>();
     for (String field : fields) {
-      values.put(field, readFieldFromDTO(field, dto));
+      values.put(field, readFieldFromDTO(field, dto, columnMetadata));
     }
     return values;
   }
 
-  public static ByteIterator readFieldFromDTO(String colName, DynamicObject row) {
-    for (int i = 0; i < row.columnMetadata().length; i++) {
-      String fieldName = row.columnMetadata()[i].name();
-      ColumnType cType = row.columnMetadata()[i].columnType();
+  public static ByteIterator readFieldFromDTO(String colName, DynamicObject row,
+                                              ColumnMetadata[] columnMetadata) {
+    for (int i = 0; i < columnMetadata.length; i++) {
+      String fieldName = columnMetadata[i].name();
+      ColumnType cType = columnMetadata[i].columnType();
       if (fieldName.equals(colName)) {
 
         if (cType == ColumnType.Varchar || cType == ColumnType.Longvarchar) {
@@ -137,7 +143,7 @@ public final class UserTableHelper {
       }
     }
 
-    if(!set){
+    if (!set) {
       throw new UnsupportedOperationException("Failed to set primary key for read operation");
     }
   }

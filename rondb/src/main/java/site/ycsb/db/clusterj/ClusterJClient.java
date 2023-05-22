@@ -21,6 +21,7 @@
  */
 package site.ycsb.db.clusterj;
 
+import com.mysql.clusterj.ColumnMetadata;
 import com.mysql.clusterj.DynamicObject;
 import com.mysql.clusterj.Query;
 import com.mysql.clusterj.Session;
@@ -94,8 +95,9 @@ public final class ClusterJClient extends DB {
             logger.info("Read. Key: " + key + " Not Found.");
             return Status.NOT_FOUND;
           }
+          ColumnMetadata[] columnMetadata = row.columnMetadata();
           for (String field : fields) {
-            result.put(field, UserTableHelper.readFieldFromDTO(field, row));
+            result.put(field, UserTableHelper.readFieldFromDTO(field, row, columnMetadata));
           }
           connection.releaseDTO(session, row);
           if (logger.isDebugEnabled()) {
@@ -136,8 +138,9 @@ public final class ClusterJClient extends DB {
 
             Set<String> rowFields = fields.get(i);
             HashMap<String, ByteIterator> rowResult = results.get(pk);
+            ColumnMetadata[] columnMetadata = row.columnMetadata();
             for (String field : rowFields) {
-              rowResult.put(field, UserTableHelper.readFieldFromDTO(field, row));
+              rowResult.put(field, UserTableHelper.readFieldFromDTO(field, row, columnMetadata));
             }
           }
 
@@ -153,6 +156,43 @@ public final class ClusterJClient extends DB {
         }
       };
       return handler.runTx(session, dbClass, keys.get(0)/*use first key as partition key*/);
+    } finally {
+      connection.releaseSession(session);
+    }
+  }
+
+  @Override
+  public Status batchUpdate(String table, List<String> keys,
+                            List<Map<String, ByteIterator>> allValues) {
+    Class<DynamicObject> dbClass = connection.getDTOClass(table);
+    final Session session = connection.getSession();
+
+    try {
+      TransactionReqHandler handler = new TransactionReqHandler("BatchUpdate") {
+        @Override
+        public Status action() throws Exception {
+
+          List<DynamicObject> allRows = new ArrayList<>(keys.size());
+
+          for (int i = 0; i < keys.size(); i++) {
+            String key = keys.get(i);
+            Map<String, ByteIterator> values = allValues.get(i);
+            DynamicObject row = UserTableHelper.createDTO(connection.classGenerator, session, table
+                , key, values);
+            allRows.add(row);
+          }
+
+          session.savePersistentAll(allRows);
+          for (DynamicObject row : allRows) {
+            connection.releaseDTO(session, row);
+          }
+          if (logger.isDebugEnabled()) {
+            logger.debug("BatchUpdated keys: " + Arrays.toString(keys.toArray()));
+          }
+          return Status.OK;
+        }
+      };
+      return handler.runTx(session, dbClass, keys.get(0));
     } finally {
       connection.releaseSession(session);
     }

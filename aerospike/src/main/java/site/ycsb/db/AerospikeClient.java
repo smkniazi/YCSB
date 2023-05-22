@@ -130,6 +130,12 @@ public class AerospikeClient extends site.ycsb.DB {
   }
 
   @Override
+  public Status batchUpdate(String table, List<String> keys,
+                            List<Map<String, ByteIterator>>  values) {
+    throw  new UnsupportedOperationException("Batch updates are not yet supported");
+  }
+
+  @Override
   public Status scan(String table, String start, int count, Set<String> fields,
       Vector<HashMap<String, ByteIterator>> result) {
     System.err.println("Scan not implemented");

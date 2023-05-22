@@ -147,6 +147,12 @@ public class SeaweedClient extends DB {
     throw  new UnsupportedOperationException("Batch reads are not yet supported");
   }
 
+  @Override
+  public Status batchUpdate(String table, List<String> keys,
+                            List<Map<String, ByteIterator>>  values) {
+    throw  new UnsupportedOperationException("Batch updates are not yet supported");
+  }
+
   /**
    * Update a file in the table. Any field/value pairs in the specified
    * values HashMap will be written into the file with the specified file

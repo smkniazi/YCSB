@@ -214,6 +214,12 @@ public class GridDBClient extends site.ycsb.DB {
     throw  new UnsupportedOperationException("Batch reads are not yet supported");
   }
 
+  @Override
+  public Status batchUpdate(String table, List<String> keys,
+                            List<Map<String, ByteIterator>>  values) {
+    throw  new UnsupportedOperationException("Batch updates are not yet supported");
+  }
+
   public Status scan(String table, String startkey, int recordcount, Set<String> fields,
           Vector<HashMap<String, ByteIterator>> result) {
     LOGGER.severe("[ERROR]scan() not supported");

@@ -59,15 +59,15 @@ This section describes how to run YCSB on RonDB.
 
 6. Customise workload configuration
 
-    Specify the desired benchmark configurations using a custom or pre-defined [workload file](../workloads/).
-    Inside the workload file, define RonDB-specific parameters:
-   - *rondb.api.type* i.e. clusterj, REST, gRPC. Default: clusterj
+    Specify the desired benchmark configurations using a custom or 
+    pre-defined [workload file](../workloads/).   This module supports three different APIs to access RonDB. These APIs are 
+   ClusterJ, REST, and gRPC. Currently, REST and  gRPC only supports read-only operations.  For 
+   workloads that involve both read and write  operations, all write operations are performed 
+   using clusterJ API while you can choose an API   type for read operations, for example,  
+      - *rondb.read.api.type* i.e. clusterj, REST, gRPC. Default: clusterj
 
 
-   - *ClusterJ Configurations*
-
-   Configuration parameters needed for running YCSB using ClusterJ API
-
+   ClusterJ Configuration parameters 
   
        - rondb.connection.string             Default: 127.0.0.1:1186
        - rondb.schema                        Default: ycsb
@@ -96,7 +96,7 @@ This section describes how to run YCSB on RonDB.
       - "fieldcount=1", "fieldlength=4096", "fieldnameprefix=FIELD"
       - "fieldcount=10", "fieldlength=100", "fieldnameprefix=FIELD" 
 
-7. Load the data
+7. Load data
    
     Currently, you can only use "ClusterJ" API for loading data into RonDB cluster. 
 
@@ -105,13 +105,12 @@ This section describes how to run YCSB on RonDB.
     ./bin/ycsb load rondb -s -P workloads/workloadc \
         -p "rondb.connection.string=127.0.0.1:1186" \
         -p "rondb.schema=ycsb" \
-        -p "rondb.api.type=clusterj" \
         -p "fieldcount=10"  \
         -p "fieldlength=100"  \
         -p "fieldnameprefix=FIELD"
     ```
 
-8. Run the workload test 
+8. Run a workload test 
 
   - *ClusterJ API*
 
@@ -120,25 +119,28 @@ This section describes how to run YCSB on RonDB.
     ./bin/ycsb run rondb -s -P workloads/workloadc \
         -p "rondb.connection.string=127.0.0.1:1186" \
         -p "rondb.schema=ycsb" \
-        -p "rondb.api.type=clusterj" \
+        -p "rondb.read.api.type=clusterj" \
         -p "fieldcount=10"  \
         -p "fieldlength=100" \
         -p "fieldnameprefix=FIELD" \
-        -p "readBatchSize=5" 
+        -p "readBatchSize=5" \
+        -p "updateBatchSize=5" 
     ```
   - *REST API*
 
     ```bash
     # Use -p flag to overwrite any parameters in the specified workload file
     ./bin/ycsb run rondb -s -P workloads/workloadc \
+        -p "rondb.connection.string=127.0.0.1:1186" \
         -p "rondb.schema=ycsb" \
-        -p "rondb.api.type=REST" \
+        -p "rondb.read.api.type=REST" \
         -p "rondb.api.server.ip=127.0.0.1" \
         -p "rondb.api.server.rest.port=4406" \
         -p "fieldcount=10"  \
         -p "fieldlength=100" \
         -p "fieldnameprefix=FIELD" \
-        -p "readBatchSize=5" 
+        -p "readBatchSize=5" \
+        -p "updateBatchSize=5" 
     ```
     
   - *gRPC*
@@ -146,12 +148,14 @@ This section describes how to run YCSB on RonDB.
     ```bash
     # Use -p flag to overwrite any parameters in the specified workload file
     ./bin/ycsb run rondb -s -P workloads/workloadc \
+        -p "rondb.connection.string=127.0.0.1:1186" \
         -p "rondb.schema=ycsb" \
-        -p "rondb.api.type=GRPC" \
+        -p "rondb.read.api.type=GRPC" \
         -p "rondb.api.server.ip=127.0.0.1" \
         -p "rondb.api.server.rest.port=5406" \
         -p "fieldcount=10"  \
         -p "fieldlength=100" \
         -p "fieldnameprefix=FIELD" \
-        -p "readBatchSize=5" 
+        -p "readBatchSize=5" \
+        -p "updateBatchSize=5" 
     ```

@@ -100,6 +100,16 @@ public abstract class DB {
                                    HashMap<String /*key*/, HashMap<String/*field*/, ByteIterator>> result);
 
   /**
+   * Batch update records.
+   *
+   * @param table The name of the table
+   * @param keys record keys
+   * @param values A list of HashMaps of field/value pairs to update in the record
+   * @return The result of the operation.
+   */
+  public abstract Status batchUpdate(String table, List<String> keys, List<Map<String, ByteIterator>>  values);
+
+  /**
    * Perform a range scan for a set of records in the database. Each field/value pair from the result will be stored
    * in a HashMap.
    *

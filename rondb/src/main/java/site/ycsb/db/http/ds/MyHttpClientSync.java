@@ -23,12 +23,25 @@ package site.ycsb.db.http.ds;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
+import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
 import site.ycsb.db.http.MyHttpException;
 
+import javax.net.ssl.SSLContext;
 import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * MyHttpClientSync.
@@ -36,17 +49,49 @@ import java.io.IOException;
 public class MyHttpClientSync extends MyHttpClient {
 
   private ThreadLocal<CloseableHttpClient> httpClients = new ThreadLocal<>();
+  private boolean useTLS;
 
-  public MyHttpClientSync() {
-    //cm = new PoolingHttpClientConnectionManager();
-    //      cm.setMaxTotal(numThreads);
-    //      cm.setDefaultMaxPerRoute(numThreads);
-    //HttpHost host = new HttpHost(restServerIP, restServerPort);
-    //      cm.setMaxPerRoute(new HttpRoute(host), numThreads);
+  public MyHttpClientSync(boolean useTLS) {
+    this.useTLS = useTLS;
   }
 
 
   public CloseableHttpClient getHttpClient() {
+    if (useTLS){
+      return getHttpClientTLS();
+    } else {
+      return getHttpClientNonSSL();
+    }
+  }
+  private CloseableHttpClient getHttpClientTLS(){
+    CloseableHttpClient httpClient;
+    httpClient = httpClients.get();
+    if (httpClient == null) {
+      try {
+        TrustStrategy acceptingTrustStrategy = (cert, authType) -> true;
+        SSLContext sslContext =
+            SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build();
+        SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext,
+            NoopHostnameVerifier.INSTANCE);
+
+        Registry<ConnectionSocketFactory> socketFactoryRegistry =
+            RegistryBuilder.<ConnectionSocketFactory>create()
+                .register("https", sslsf)
+                .register("http", new PlainConnectionSocketFactory())
+                .build();
+
+        BasicHttpClientConnectionManager connectionManager =
+            new BasicHttpClientConnectionManager(socketFactoryRegistry);
+        httpClient = HttpClients.custom().setSSLSocketFactory(sslsf)
+            .setConnectionManager(connectionManager).build();
+        httpClients.set(httpClient);
+      } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
+        e.printStackTrace();
+      }
+    }
+    return httpClient;
+  }
+  private CloseableHttpClient getHttpClientNonSSL(){
     CloseableHttpClient httpClient;
     httpClient = httpClients.get();
     if (httpClient == null) {
@@ -76,6 +121,9 @@ public class MyHttpClientSync extends MyHttpClient {
         }
       }
     }
+    System.out.println(">more details " + resp.getStatusLine());
+    System.out.println(">more details " + resp);
     throw new MyHttpException("Req failed code : " + resp.getStatusLine().getStatusCode());
   }
 }
+
