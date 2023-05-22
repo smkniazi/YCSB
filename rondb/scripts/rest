@@ -11,10 +11,12 @@ export JAVA_OPTS="-Djava.library.path=/Users/salman/code/hops/rondb21/build/lib"
    -p "rondb.read.api.type=REST" \
    -p "rondb.api.server.ip=127.0.0.1" \
    -p "rondb.api.server.rest.port=4406" \
+   -p "rondb.rest.api.use.tls=true" \
+   -p "rondb.rest.api.use.async.requests=false" \
    -p "fieldcount=10"  \
    -p "fieldlength=100" \
    -p "fieldnameprefix=FIELD" \
-   -p "threadcount=10" \
+   -p "threadcount=1" \
    -p "readBatchSize=5" \
    -p "updateBatchSize=5"
 

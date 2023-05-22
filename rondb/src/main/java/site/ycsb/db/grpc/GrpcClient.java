@@ -25,6 +25,9 @@ import com.rondb.grpcserver.*;
 import com.rondb.grpcserver.RonDBRESTGrpc.RonDBRESTBlockingStub;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.NettyChannelBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import site.ycsb.*;
@@ -46,6 +49,7 @@ public final class GrpcClient extends DB {
   private String databaseName;
   private String grpcServerIP;
   private int grpcServerPort;
+  private boolean useTLS;
   private final Properties properties;
   private final int threadID;
 
@@ -71,11 +75,22 @@ public final class GrpcClient extends DB {
       grpcServerIP = inetAddress.getHostAddress();
       grpcServerPort = Integer.parseInt(properties.getProperty(ConfigKeys.RONDB_GRPC_SERVER_PORT_KEY,
           Integer.toString(ConfigKeys.RONDB_GRPC_SERVER_PORT_DEFAULT)));
+      useTLS = Boolean.parseBoolean(properties.getProperty(ConfigKeys.RONDB_GRPC_API_USE_TLS_KEY,
+          Boolean.toString(ConfigKeys.RONDB_GRPC_API_USE_TLS_DEFAULT)));
       String grpcServerAddress = grpcServerIP + ":" + grpcServerPort;
       logger.info("Connecting to gRPC test endpoint " + grpcServerAddress);
 
-      channel = ManagedChannelBuilder.forAddress(grpcServerIP,
-          grpcServerPort).usePlaintext().build();
+      if (useTLS) {
+        channel = NettyChannelBuilder.forAddress(grpcServerIP,
+                grpcServerPort)
+            .sslContext(GrpcSslContexts.forClient()
+                .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                .build())
+            .build();
+      } else {
+        channel = ManagedChannelBuilder.forAddress(grpcServerIP,
+            grpcServerPort).usePlaintext().build();
+      }
       blockingStub = RonDBRESTGrpc.newBlockingStub(channel);
 
       test();
@@ -130,12 +145,12 @@ public final class GrpcClient extends DB {
     // unpack the response
     for (int i = 0; i < response.getResponsesCount(); i++) {
       PKReadResponseProto pkResponse = response.getResponses(i);
-      if (pkResponse.getCode() != 200){
+      if (pkResponse.getCode() != 200) {
         allGood = false;
         break;
       }
 
-      String pk =  pkResponse.getOperationID();
+      String pk = pkResponse.getOperationID();
       HashMap<String, ByteIterator> result = results.get(pk);
       assert result != null;
 
@@ -145,7 +160,7 @@ public final class GrpcClient extends DB {
       }
     }
 
-    if(allGood) {
+    if (allGood) {
       return Status.OK;
     } else {
       return Status.ERROR;
@@ -154,8 +169,8 @@ public final class GrpcClient extends DB {
 
   @Override
   public Status batchUpdate(String table, List<String> keys,
-                            List<Map<String, ByteIterator>>  values) {
-    throw  new UnsupportedOperationException("Batch updates are not yet supported");
+                            List<Map<String, ByteIterator>> values) {
+    throw new UnsupportedOperationException("Batch updates are not yet supported");
   }
 
   private PKReadRequestProto createPKRequestProto(String table, String pk,
@@ -201,7 +216,7 @@ public final class GrpcClient extends DB {
   }
 
   @Override
-  public synchronized  void cleanup() throws DBException {
+  public synchronized void cleanup() throws DBException {
     if (channel != null) {
       channel.shutdown();
       channel = null;
